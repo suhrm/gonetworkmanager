@@ -11,6 +11,7 @@ const (
 	NetworkManagerObjectPath = "/org/freedesktop/NetworkManager"
 
 	NetworkManagerGetDevices               = NetworkManagerInterface + ".GetDevices"
+	NetworkManagerGetAllDevices            = NetworkManagerInterface + ".GetAllDevices"
 	NetworkManagerActivateConnection       = NetworkManagerInterface + ".ActivateConnection"
 	NetworkManagerAddAndActivateConnection = NetworkManagerInterface + ".AddAndActivateConnection"
 	NetworkManagerPropertyState            = NetworkManagerInterface + ".State"
@@ -18,9 +19,11 @@ const (
 )
 
 type NetworkManager interface {
-
-	// GetDevices gets the list of network devices.
+	// Get the list of realized network devices.
 	GetDevices() []Device
+
+	// Get the list of all network devices.
+	GetAllDevices() []Device
 
 	// GetState returns the overall networking state as determined by the
 	// NetworkManager daemon, based on the state of network devices under it's
@@ -66,6 +69,23 @@ func (n *networkManager) GetDevices() []Device {
 	var devicePaths []dbus.ObjectPath
 
 	n.call(&devicePaths, NetworkManagerGetDevices)
+	devices := make([]Device, len(devicePaths))
+
+	var err error
+	for i, path := range devicePaths {
+		devices[i], err = DeviceFactory(path)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return devices
+}
+
+func (n *networkManager) GetAllDevices() []Device {
+	var devicePaths []dbus.ObjectPath
+
+	n.call(&devicePaths, NetworkManagerGetAllDevices)
 	devices := make([]Device, len(devicePaths))
 
 	var err error
