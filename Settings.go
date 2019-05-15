@@ -10,15 +10,23 @@ const (
 
 	SettingsListConnections = SettingsInterface + ".ListConnections"
 	SettingsAddConnection   = SettingsInterface + ".AddConnection"
+	SettingsSaveHostname    = SettingsInterface + ".SaveHostname"
+
+	SettingsHostnameProperty = SettingsInterface + ".Hostname"
 )
 
 type Settings interface {
-
 	// ListConnections gets list the saved network connections known to NetworkManager
 	ListConnections() []Connection
 
-	// AddConnection call new connection and save it to disk.
+	// AddConnection callAndPanic new connection and save it to disk.
 	AddConnection(settings ConnectionSettings) Connection
+
+	// Save the hostname to persistent configuration.
+	SaveHostname(hostname string)
+
+	// The machine hostname stored in persistent configuration.
+	Hostname() string
 }
 
 func NewSettings() (Settings, error) {
@@ -55,4 +63,17 @@ func (s *settings) AddConnection(settings ConnectionSettings) Connection {
 		panic(err)
 	}
 	return con
+}
+
+func (s *settings) SaveHostname(hostname string) {
+	err := s.call(SettingsSaveHostname, hostname)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (s *settings) Hostname() string {
+	hostname := s.getStringProperty(SettingsHostnameProperty)
+
+	return hostname
 }
