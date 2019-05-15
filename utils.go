@@ -30,19 +30,23 @@ func (d *dbusBase) init(iface string, objectPath dbus.ObjectPath) error {
 	return nil
 }
 
-func (d *dbusBase) call(value interface{}, method string, args ...interface{}) {
-	err := d.callError(value, method, args...)
+func (d *dbusBase) callAndPanic(value interface{}, method string, args ...interface{}) {
+	err := d.callWithReturn(value, method, args...)
 	if err != nil {
 		panic(err)
 	}
 }
 
-func (d *dbusBase) callError(value interface{}, method string, args ...interface{}) error {
-	return d.obj.Call(method, 0, args...).Store(value)
+func (d *dbusBase) call(method string, args ...interface{}) error {
+	return d.obj.Call(method, 0, args...).Err
 }
 
-func (d *dbusBase) callError2(value1 interface{}, value2 interface{}, method string, args ...interface{}) error {
-	return d.obj.Call(method, 0, args...).Store(value1, value2)
+func (d *dbusBase) callWithReturn(ret interface{}, method string, args ...interface{}) error {
+	return d.obj.Call(method, 0, args...).Store(ret)
+}
+
+func (d *dbusBase) callWithReturn2(ret1 interface{}, ret2 interface{}, method string, args ...interface{}) error {
+	return d.obj.Call(method, 0, args...).Store(ret1, ret2)
 }
 
 func (d *dbusBase) subscribe(iface, member string) {

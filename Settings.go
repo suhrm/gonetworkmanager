@@ -33,7 +33,7 @@ type settings struct {
 func (s *settings) ListConnections() []Connection {
 	var connectionPaths []dbus.ObjectPath
 
-	s.call(&connectionPaths, SettingsListConnections)
+	s.callAndPanic(&connectionPaths, SettingsListConnections)
 	connections := make([]Connection, len(connectionPaths))
 
 	var err error
@@ -49,7 +49,7 @@ func (s *settings) ListConnections() []Connection {
 
 func (s *settings) AddConnection(settings ConnectionSettings) Connection {
 	var path dbus.ObjectPath
-	s.call(&path, SettingsAddConnection, settings)
+	s.callAndPanic(&path, SettingsAddConnection, settings)
 	con, err := NewConnection(path)
 	if err != nil {
 		panic(err)

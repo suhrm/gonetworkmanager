@@ -37,7 +37,7 @@ type wirelessDevice struct {
 func (d *wirelessDevice) GetAccessPoints() []AccessPoint {
 	var apPaths []dbus.ObjectPath
 
-	d.call(&apPaths, WirelessDeviceGetAccessPoints)
+	d.callAndPanic(&apPaths, WirelessDeviceGetAccessPoints)
 	aps := make([]AccessPoint, len(apPaths))
 
 	var err error
