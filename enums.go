@@ -48,22 +48,38 @@ const (
 type NmDeviceType uint32
 
 const (
-	NmDeviceTypeUnknown    NmDeviceType = 0
-	NmDeviceTypeEthernet   NmDeviceType = 1
-	NmDeviceTypeWifi       NmDeviceType = 2
-	NmDeviceTypeUnused1    NmDeviceType = 3
-	NmDeviceTypeUnused2    NmDeviceType = 4
-	NmDeviceTypeBt         NmDeviceType = 5
-	NmDeviceTypeOlpcMesh   NmDeviceType = 6
-	NmDeviceTypeWimax      NmDeviceType = 7
-	NmDeviceTypeModem      NmDeviceType = 8
-	NmDeviceTypeInfiniband NmDeviceType = 9
-	NmDeviceTypeBond       NmDeviceType = 10
-	NmDeviceTypeVlan       NmDeviceType = 11
-	NmDeviceTypeAdsl       NmDeviceType = 12
-	NmDeviceTypeBridge     NmDeviceType = 13
-	NmDeviceTypeGeneric    NmDeviceType = 14
-	NmDeviceTypeTeam       NmDeviceType = 15
+	NmDeviceTypeUnknown       NmDeviceType = 0
+	NmDeviceTypeGeneric       NmDeviceType = 14
+	NmDeviceTypeEthernet      NmDeviceType = 1
+	NmDeviceTypeWifi          NmDeviceType = 2
+	NmDeviceTypeUnused1       NmDeviceType = 3
+	NmDeviceTypeUnused2       NmDeviceType = 4
+	NmDeviceTypeBt            NmDeviceType = 5
+	NmDeviceTypeOlpcMesh      NmDeviceType = 6
+	NmDeviceTypeWimax         NmDeviceType = 7
+	NmDeviceTypeModem         NmDeviceType = 8
+	NmDeviceTypeInfiniband    NmDeviceType = 9
+	NmDeviceTypeBond          NmDeviceType = 10
+	NmDeviceTypeVlan          NmDeviceType = 11
+	NmDeviceTypeAdsl          NmDeviceType = 12
+	NmDeviceTypeBridge        NmDeviceType = 13
+	NmDeviceTypeTeam          NmDeviceType = 15
+	NmDeviceTypeTun           NmDeviceType = 16 // a TUN or TAP interface
+	NmDeviceTypeIp_tunnel     NmDeviceType = 17 // a IP tunnel interface
+	NmDeviceTypeMacvlan       NmDeviceType = 18 // a MACVLAN interface
+	NmDeviceTypeVxlan         NmDeviceType = 19 // a VXLAN interface
+	NmDeviceTypeVeth          NmDeviceType = 20 // a VETH interface
+	NmDeviceTypeMacsec        NmDeviceType = 21 // a MACsec interface
+	NmDeviceTypeDummy         NmDeviceType = 22 // a dummy interface
+	NmDeviceTypePpp           NmDeviceType = 23 // a PPP interface
+	NmDeviceTypeOvs_interface NmDeviceType = 24 // a Open vSwitch interface
+	NmDeviceTypeOvs_port      NmDeviceType = 25 // a Open vSwitch port
+	NmDeviceTypeOvs_bridge    NmDeviceType = 26 // a Open vSwitch bridge
+	NmDeviceTypeWpan          NmDeviceType = 27 // a IEEE 802.15.4 (WPAN) MAC Layer Device
+	NmDeviceType6lowpan       NmDeviceType = 28 // 6LoWPAN interface
+	NmDeviceTypeWireguard     NmDeviceType = 29 // a WireGuard interface
+	NmDeviceTypeWifi_p2p      NmDeviceType = 30 // an 802.11 Wi-Fi P2P device (Since: 1.16)
+
 )
 
 //go:generate stringer -type=Nm80211APFlags
