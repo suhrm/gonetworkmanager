@@ -139,7 +139,7 @@ func (d *device) GetState() NmDeviceState {
 }
 
 func (d *device) GetIP4Config() IP4Config {
-	path := d.getObjectProperty(DevicePropertyIp4Address)
+	path := d.getObjectProperty(DevicePropertyIp4Config)
 	if path == "/" {
 		return nil
 	}
