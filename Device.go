@@ -56,55 +56,41 @@ func DeviceFactory(objectPath dbus.ObjectPath) (Device, error) {
 type Device interface {
 	GetPath() dbus.ObjectPath
 
-	// Operating-system specific transient device hardware identifier. This is an
-	// opaque string representing the underlying hardware for the device, and
-	// shouldn't be used to keep track of individual devices. For some device types
-	// (Bluetooth, Modems) it is an identifier used by the hardware service
-	// (ie bluez or ModemManager) to refer to that device, and client programs use
-	// it get additional information from those services which NM does not provide.
-	// The Udi is not guaranteed to be consistent across reboots or hotplugs of the
-	// hardware. If you're looking for a way to uniquely track each device in your
-	// application, use the object path. If you're looking for a way to track a
-	// specific piece of hardware across reboot or hotplug, use a MAC address or
-	// USB serial number.
+	// Operating-system specific transient device hardware identifier. This is an opaque string representing the underlying hardware for the device, and shouldn't be used to keep track of individual devices. For some device types (Bluetooth, Modems) it is an identifier used by the hardware service (ie bluez or ModemManager) to refer to that device, and client programs use it get additional information from those services which NM does not provide. The Udi is not guaranteed to be consistent across reboots or hotplugs of the hardware. If you're looking for a way to uniquely track each device in your application, use the object path. If you're looking for a way to track a specific piece of hardware across reboot or hotplug, use a MAC address or USB serial number.
 	GetUdi() string
 
-	// GetInterface gets the name of the device's control (and often data)
-	// interface.
+	// The name of the device's control (and often data) interface. Note that non UTF-8 characters are backslash escaped, so the resulting name may be longer then 15 characters. Use g_strcompress() to revert the escaping.
 	GetInterface() string
 
-	// GetIpInterface gets the IP interface name of the device.
+	// The name of the device's data interface when available. This property may not refer to the actual data interface until the device has successfully established a data connection, indicated by the device's State becoming ACTIVATED. Note that non UTF-8 characters are backslash escaped, so the resulting name may be longer then 15 characters. Use g_strcompress() to revert the escaping.
 	GetIpInterface() string
 
-	// GetState gets the current state of the device.
+	// The current state of the device.
 	GetState() NmDeviceState
 
-	// GetIP4Config gets the Ip4Config object describing the configuration of the
-	// device. Only valid when the device is in the NM_DEVICE_STATE_ACTIVATED
-	// state.
+	// Object path of the Ip4Config object describing the configuration of the device. Only valid when the device is in the NM_DEVICE_STATE_ACTIVATED state.
 	GetIP4Config() IP4Config
 
-	// GetDHCP4Config gets the Dhcp4Config object describing the configuration of the
-	// device. Only valid when the device is in the NM_DEVICE_STATE_ACTIVATED
-	// state.
+	// Object path of the Dhcp4Config object describing the DHCP options returned by the DHCP server. Only valid when the device is in the NM_DEVICE_STATE_ACTIVATED state.
 	GetDHCP4Config() DHCP4Config
 
-	// GetDeviceType gets the general type of the network device; ie Ethernet,
-	// WiFi, etc.
-	GetDeviceType() NmDeviceType
-
-	// GetAvailableConnections gets an array of object paths of every configured
-	// connection that is currently 'available' through this device.
-	GetAvailableConnections() []Connection
-
-	// Whether or not this device is managed by NetworkManager. Setting this property
-	// has a similar effect to configuring the device as unmanaged via the
-	// keyfile.unmanaged-devices setting in NetworkManager.conf. Changes to this value
-	// are not persistent and lost after NetworkManager restart.
+	// Whether or not this device is managed by NetworkManager. Setting this property has a similar effect to configuring the device as unmanaged via the keyfile.unmanaged-devices setting in NetworkManager.conf. Changes to this value are not persistent and lost after NetworkManager restart.
 	GetManaged() bool
 
 	// If TRUE, indicates the device is allowed to autoconnect. If FALSE, manual intervention is required before the device will automatically connect to a known network, such as activating a connection using the device, or setting this property to TRUE. This property cannot be set to TRUE for default-unmanaged devices, since they never autoconnect.
 	GetAutoConnect() bool
+
+	// The general type of the network device; ie Ethernet, Wi-Fi, etc.
+	GetDeviceType() NmDeviceType
+
+	// An array of object paths of every configured connection that is currently 'available' through this device.
+	GetAvailableConnections() []Connection
+
+	// If non-empty, an (opaque) indicator of the physical network port associated with the device. This can be used to recognize when two seemingly-separate hardware devices are actually just different virtual interfaces to the same physical port.
+	GetPhysicalPortId() string
+
+	// The device MTU (maximum transmission unit).
+	GetMtu() uint32
 
 	MarshalJSON() ([]byte, error)
 }
@@ -166,6 +152,14 @@ func (d *device) GetDHCP4Config() DHCP4Config {
 	return cfg
 }
 
+func (d *device) GetManaged() bool {
+	return d.getBoolProperty(DevicePropertyManaged)
+}
+
+func (d *device) GetAutoConnect() bool {
+	return d.getBoolProperty(DevicePropertyAutoconnect)
+}
+
 func (d *device) GetDeviceType() NmDeviceType {
 	return NmDeviceType(d.getUint32Property(DevicePropertyDeviceType))
 }
@@ -185,12 +179,12 @@ func (d *device) GetAvailableConnections() []Connection {
 	return conns
 }
 
-func (d *device) GetManaged() bool {
-	return d.getBoolProperty(DevicePropertyManaged)
+func (d *device) GetPhysicalPortId() string {
+	return d.getStringProperty(DevicePropertyPhysicalPortId)
 }
 
-func (d *device) GetAutoConnect() bool {
-	return d.getBoolProperty(DevicePropertyAutoconnect)
+func (d *device) GetMtu() uint32 {
+	return d.getUint32Property(DevicePropertyMtu)
 }
 
 func (d *device) marshalMap() map[string]interface{} {
