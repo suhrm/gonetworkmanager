@@ -13,6 +13,7 @@ const (
 	DevicePropertyInterface            = DeviceInterface + ".Interface"
 	DevicePropertyIpInterface          = DeviceInterface + ".IpInterface"
 	DevicePropertyState                = DeviceInterface + ".State"
+	DevicePropertyManaged              = DeviceInterface + ".Managed"
 	DevicePropertyIP4Config            = DeviceInterface + ".Ip4Config"
 	DevicePropertyDeviceType           = DeviceInterface + ".DeviceType"
 	DevicePropertyAvailableConnections = DeviceInterface + ".AvailableConnections"
@@ -76,6 +77,12 @@ type Device interface {
 	// GetAvailableConnections gets an array of object paths of every configured
 	// connection that is currently 'available' through this device.
 	GetAvailableConnections() []Connection
+
+	// Whether or not this device is managed by NetworkManager. Setting this property
+	// has a similar effect to configuring the device as unmanaged via the
+	// keyfile.unmanaged-devices setting in NetworkManager.conf. Changes to this value
+	// are not persistent and lost after NetworkManager restart.
+	GetManaged() bool
 
 	MarshalJSON() ([]byte, error)
 }
@@ -154,6 +161,10 @@ func (d *device) GetAvailableConnections() []Connection {
 	}
 
 	return conns
+}
+
+func (d *device) GetManaged() bool {
+	return d.getBoolProperty(DevicePropertyManaged)
 }
 
 func (d *device) marshalMap() map[string]interface{} {
