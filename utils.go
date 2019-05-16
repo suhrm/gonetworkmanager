@@ -84,6 +84,14 @@ func (d *dbusBase) getSliceObjectProperty(iface string) []dbus.ObjectPath {
 	return value
 }
 
+func (d *dbusBase) getBoolProperty(iface string) bool {
+	value, ok := d.getProperty(iface).(bool)
+	if !ok {
+		panic(makeErrVariantType(iface))
+	}
+	return value
+}
+
 func (d *dbusBase) getStringProperty(iface string) string {
 	value, ok := d.getProperty(iface).(string)
 	if !ok {
