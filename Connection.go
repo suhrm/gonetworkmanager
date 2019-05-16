@@ -9,7 +9,20 @@ import (
 const (
 	ConnectionInterface = SettingsInterface + ".Connection"
 
-	ConnectionGetSettings = ConnectionInterface + ".GetSettings"
+	/* Methods */
+	ConnectionUpdate        = ConnectionInterface + ".Update"
+	ConnectionUpdateUnsaved = ConnectionInterface + ".UpdateUnsaved"
+	ConnectionDelete        = ConnectionInterface + ".Delete"
+	ConnectionGetSettings   = ConnectionInterface + ".GetSettings"
+	ConnectionGetSecrets    = ConnectionInterface + ".GetSecrets"
+	ConnectionClearSecrets  = ConnectionInterface + ".ClearSecrets"
+	ConnectionSave          = ConnectionInterface + ".Save"
+	ConnectionUpdate2       = ConnectionInterface + ".Update2"
+
+	/* Properties */
+	ConnectionPropertyUnsaved  = ConnectionInterface + ".Unsaved"  // readable   b
+	ConnectionPropertyFlags    = ConnectionInterface + ".Flags"    // readable   u
+	ConnectionPropertyFilename = ConnectionInterface + ".Filename" // readable   s
 )
 
 //type ConnectionSettings map[string]map[string]interface{}

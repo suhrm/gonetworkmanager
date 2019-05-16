@@ -9,15 +9,34 @@ import (
 const (
 	DeviceInterface = NetworkManagerInterface + ".Device"
 
-	DevicePropertyUdi                  = DeviceInterface + ".Udi"
-	DevicePropertyInterface            = DeviceInterface + ".Interface"
-	DevicePropertyIpInterface          = DeviceInterface + ".IpInterface"
-	DevicePropertyState                = DeviceInterface + ".State"
-	DevicePropertyManaged              = DeviceInterface + ".Managed"
-	DevicePropertyIP4Config            = DeviceInterface + ".Ip4Config"
-	DevicePropertyDeviceType           = DeviceInterface + ".DeviceType"
-	DevicePropertyAvailableConnections = DeviceInterface + ".AvailableConnections"
-	DevicePropertyDhcp4Config          = DeviceInterface + ".Dhcp4Config"
+	/* Properties */
+	DevicePropertyUdi                  = DeviceInterface + ".Udi"                  // readable   s
+	DevicePropertyInterface            = DeviceInterface + ".Interface"            // readable   s
+	DevicePropertyIpInterface          = DeviceInterface + ".IpInterface"          // readable   s
+	DevicePropertyDriver               = DeviceInterface + ".Driver"               // readable   s
+	DevicePropertyDriverVersion        = DeviceInterface + ".DriverVersion"        // readable   s
+	DevicePropertyFirmwareVersion      = DeviceInterface + ".FirmwareVersion"      // readable   s
+	DevicePropertyCapabilities         = DeviceInterface + ".Capabilities"         // readable   u
+	DevicePropertyIp4Address           = DeviceInterface + ".Ip4Address"           // readable   u
+	DevicePropertyState                = DeviceInterface + ".State"                // readable   u
+	DevicePropertyStateReason          = DeviceInterface + ".StateReason"          // readable   (uu)
+	DevicePropertyActiveConnection     = DeviceInterface + ".ActiveConnection"     // readable   o
+	DevicePropertyIp4Config            = DeviceInterface + ".Ip4Config"            // readable   o
+	DevicePropertyDhcp4Config          = DeviceInterface + ".Dhcp4Config"          // readable   o
+	DevicePropertyIp6Config            = DeviceInterface + ".Ip6Config"            // readable   o
+	DevicePropertyDhcp6Config          = DeviceInterface + ".Dhcp6Config"          // readable   o
+	DevicePropertyManaged              = DeviceInterface + ".Managed"              // readwrite  b
+	DevicePropertyAutoconnect          = DeviceInterface + ".Autoconnect"          // readwrite  b
+	DevicePropertyFirmwareMissing      = DeviceInterface + ".FirmwareMissing"      // readable   b
+	DevicePropertyNmPluginMissing      = DeviceInterface + ".NmPluginMissing"      // readable   b
+	DevicePropertyDeviceType           = DeviceInterface + ".DeviceType"           // readable   u
+	DevicePropertyAvailableConnections = DeviceInterface + ".AvailableConnections" // readable   ao
+	DevicePropertyPhysicalPortId       = DeviceInterface + ".PhysicalPortId"       // readable   s
+	DevicePropertyMtu                  = DeviceInterface + ".Mtu"                  // readable   u
+	DevicePropertyMetered              = DeviceInterface + ".Metered"              // readable   u
+	DevicePropertyLldpNeighbors        = DeviceInterface + ".LldpNeighbors"        // readable   aa{sv}
+	DevicePropertyReal                 = DeviceInterface + ".Real"                 // readable   b
+	DevicePropertyIp4Connectivity      = DeviceInterface + ".Ip4Connectivity"      // readable   u
 )
 
 func DeviceFactory(objectPath dbus.ObjectPath) (Device, error) {
@@ -84,6 +103,9 @@ type Device interface {
 	// are not persistent and lost after NetworkManager restart.
 	GetManaged() bool
 
+	// If TRUE, indicates the device is allowed to autoconnect. If FALSE, manual intervention is required before the device will automatically connect to a known network, such as activating a connection using the device, or setting this property to TRUE. This property cannot be set to TRUE for default-unmanaged devices, since they never autoconnect.
+	GetAutoConnect() bool
+
 	MarshalJSON() ([]byte, error)
 }
 
@@ -117,7 +139,7 @@ func (d *device) GetState() NmDeviceState {
 }
 
 func (d *device) GetIP4Config() IP4Config {
-	path := d.getObjectProperty(DevicePropertyIP4Config)
+	path := d.getObjectProperty(DevicePropertyIp4Address)
 	if path == "/" {
 		return nil
 	}
@@ -165,6 +187,10 @@ func (d *device) GetAvailableConnections() []Connection {
 
 func (d *device) GetManaged() bool {
 	return d.getBoolProperty(DevicePropertyManaged)
+}
+
+func (d *device) GetAutoConnect() bool {
+	return d.getBoolProperty(DevicePropertyAutoconnect)
 }
 
 func (d *device) marshalMap() map[string]interface{} {

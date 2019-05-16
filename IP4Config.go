@@ -9,10 +9,20 @@ import (
 const (
 	IP4ConfigInterface = NetworkManagerInterface + ".IP4Config"
 
-	IP4ConfigPropertyAddresses   = IP4ConfigInterface + ".Addresses"
-	IP4ConfigPropertyRoutes      = IP4ConfigInterface + ".Routes"
-	IP4ConfigPropertyNameservers = IP4ConfigInterface + ".Nameservers"
-	IP4ConfigPropertyDomains     = IP4ConfigInterface + ".Domains"
+	/* Properties */
+	IP4ConfigPropertyAddresses      = IP4ConfigInterface + ".Addresses"      // readable   aau
+	IP4ConfigPropertyAddressData    = IP4ConfigInterface + ".AddressData"    // readable   aa{sv}
+	IP4ConfigPropertyGateway        = IP4ConfigInterface + ".Gateway"        // readable   s
+	IP4ConfigPropertyRoutes         = IP4ConfigInterface + ".Routes"         // readable   aau
+	IP4ConfigPropertyRouteData      = IP4ConfigInterface + ".RouteData"      // readable   aa{sv}
+	IP4ConfigPropertyNameservers    = IP4ConfigInterface + ".Nameservers"    // readable   au
+	IP4ConfigPropertyNameserverData = IP4ConfigInterface + ".NameserverData" // readable   aa{sv}
+	IP4ConfigPropertyDomains        = IP4ConfigInterface + ".Domains"        // readable   as
+	IP4ConfigPropertySearches       = IP4ConfigInterface + ".Searches"       // readable   as
+	IP4ConfigPropertyDnsOptions     = IP4ConfigInterface + ".DnsOptions"     // readable   as
+	IP4ConfigPropertyDnsPriority    = IP4ConfigInterface + ".DnsPriority"    // readable   i
+	IP4ConfigPropertyWinsServers    = IP4ConfigInterface + ".WinsServers"    // readable   au
+	IP4ConfigPropertyWinsServerData = IP4ConfigInterface + ".WinsServerData" // readable   as
 )
 
 type IP4Address struct {

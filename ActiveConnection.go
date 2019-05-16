@@ -5,21 +5,25 @@ import (
 )
 
 const (
-	ActiveConnectionInterface             = NetworkManagerInterface + ".Connection.Active"
-	ActiveConnectionProperyConnection     = ActiveConnectionInterface + ".Connection"
-	ActiveConnectionProperySpecificObject = ActiveConnectionInterface + ".SpecificObject"
-	ActiveConnectionProperyID             = ActiveConnectionInterface + ".Id"
-	ActiveConnectionProperyUUID           = ActiveConnectionInterface + ".Uuid"
-	ActiveConnectionProperyType           = ActiveConnectionInterface + ".Type"
-	ActiveConnectionProperyDevices        = ActiveConnectionInterface + ".Devices"
-	ActiveConnectionProperyState          = ActiveConnectionInterface + ".State"
-	ActiveConnectionProperyStateFlags     = ActiveConnectionInterface + ".StateFlags"
-	ActiveConnectionProperyDefault        = ActiveConnectionInterface + ".Default"
-	ActiveConnectionProperyIP4Config      = ActiveConnectionInterface + ".Ip4Config"
-	ActiveConnectionProperyDHCP4Config    = ActiveConnectionInterface + ".Dhcp4Config"
-	ActiveConnectionProperyDefault6       = ActiveConnectionInterface + ".Default6"
-	ActiveConnectionProperyVPN            = ActiveConnectionInterface + ".Vpn"
-	ActiveConnectionProperyMaster         = ActiveConnectionInterface + ".Master"
+	ActiveConnectionInterface = NetworkManagerInterface + ".Connection.Active"
+
+	/* Property */
+	ActiveConnectionProperyConnection     = ActiveConnectionInterface + ".Connection"     // readable   o
+	ActiveConnectionProperySpecificObject = ActiveConnectionInterface + ".SpecificObject" // readable   o
+	ActiveConnectionProperyId             = ActiveConnectionInterface + ".Id"             // readable   s
+	ActiveConnectionProperyUuid           = ActiveConnectionInterface + ".Uuid"           // readable   s
+	ActiveConnectionProperyType           = ActiveConnectionInterface + ".Type"           // readable   s
+	ActiveConnectionProperyDevices        = ActiveConnectionInterface + ".Devices"        // readable   ao
+	ActiveConnectionProperyState          = ActiveConnectionInterface + ".State"          // readable   u
+	ActiveConnectionProperyStateFlags     = ActiveConnectionInterface + ".StateFlags"     // readable   u
+	ActiveConnectionProperyDefault        = ActiveConnectionInterface + ".Default"        // readable   b
+	ActiveConnectionProperyIp4Config      = ActiveConnectionInterface + ".Ip4Config"      // readable   o
+	ActiveConnectionProperyDhcp4Config    = ActiveConnectionInterface + ".Dhcp4Config"    // readable   o
+	ActiveConnectionProperyDefault6       = ActiveConnectionInterface + ".Default6"       // readable   b
+	ActiveConnectionProperyIp6Config      = ActiveConnectionInterface + ".Ip6Config"      // readable   o
+	ActiveConnectionProperyDhcp6Config    = ActiveConnectionInterface + ".Dhcp6Config"    // readable   o
+	ActiveConnectionProperyVpn            = ActiveConnectionInterface + ".Vpn"            // readable   b
+	ActiveConnectionProperyMaster         = ActiveConnectionInterface + ".Master"         // readable   o
 )
 
 type ActiveConnection interface {
@@ -91,11 +95,11 @@ func (a *activeConnection) GetSpecificObject() AccessPoint {
 }
 
 func (a *activeConnection) GetID() string {
-	return a.getStringProperty(ActiveConnectionProperyID)
+	return a.getStringProperty(ActiveConnectionProperyId)
 }
 
 func (a *activeConnection) GetUUID() string {
-	return a.getStringProperty(ActiveConnectionProperyUUID)
+	return a.getStringProperty(ActiveConnectionProperyUuid)
 }
 
 func (a *activeConnection) GetType() string {
@@ -129,7 +133,7 @@ func (a *activeConnection) GetDefault() bool {
 }
 
 func (a *activeConnection) GetIP4Config() IP4Config {
-	path := a.getObjectProperty(ActiveConnectionProperyIP4Config)
+	path := a.getObjectProperty(ActiveConnectionProperyIp4Config)
 	r, err := NewIP4Config(path)
 	if err != nil {
 		panic(err)
@@ -138,7 +142,7 @@ func (a *activeConnection) GetIP4Config() IP4Config {
 }
 
 func (a *activeConnection) GetDHCP4Config() DHCP4Config {
-	path := a.getObjectProperty(ActiveConnectionProperyDHCP4Config)
+	path := a.getObjectProperty(ActiveConnectionProperyDhcp4Config)
 	r, err := NewDHCP4Config(path)
 	if err != nil {
 		panic(err)
@@ -147,7 +151,7 @@ func (a *activeConnection) GetDHCP4Config() DHCP4Config {
 }
 
 func (a *activeConnection) GetVPN() bool {
-	ret := a.getProperty(ActiveConnectionProperyVPN)
+	ret := a.getProperty(ActiveConnectionProperyVpn)
 	return ret.(bool)
 }
 

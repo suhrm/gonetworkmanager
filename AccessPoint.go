@@ -9,15 +9,17 @@ import (
 const (
 	AccessPointInterface = NetworkManagerInterface + ".AccessPoint"
 
-	AccessPointPropertyFlags      = AccessPointInterface + ".Flags"
-	AccessPointPropertyWPAFlags   = AccessPointInterface + ".WpaFlags"
-	AccessPointPropertyRSNFlags   = AccessPointInterface + ".RsnFlags"
-	AccessPointPropertySSID       = AccessPointInterface + ".Ssid"
-	AccessPointPropertyFrequency  = AccessPointInterface + ".Frequency"
-	AccessPointPropertyHWAddress  = AccessPointInterface + ".HwAddress"
-	AccessPointPropertyMode       = AccessPointInterface + ".Mode"
-	AccessPointPropertyMaxBitrate = AccessPointInterface + ".MaxBitrate"
-	AccessPointPropertyStrength   = AccessPointInterface + ".Strength"
+	/* Property */
+	AccessPointPropertyFlags      = AccessPointInterface + ".Flags"      // readable   u
+	AccessPointPropertyWpaFlags   = AccessPointInterface + ".WpaFlags"   // readable   u
+	AccessPointPropertyRsnFlags   = AccessPointInterface + ".RsnFlags"   // readable   u
+	AccessPointPropertySsid       = AccessPointInterface + ".Ssid"       // readable   ay
+	AccessPointPropertyFrequency  = AccessPointInterface + ".Frequency"  // readable   u
+	AccessPointPropertyHwAddress  = AccessPointInterface + ".HwAddress"  // readable   s
+	AccessPointPropertyMode       = AccessPointInterface + ".Mode"       // readable   u
+	AccessPointPropertyMaxBitrate = AccessPointInterface + ".MaxBitrate" // readable   u
+	AccessPointPropertyStrength   = AccessPointInterface + ".Strength"   // readable   y
+	AccessPointPropertyLastSeen   = AccessPointInterface + ".LastSeen"   // readable   i
 )
 
 type AccessPoint interface {
@@ -76,15 +78,15 @@ func (a *accessPoint) GetFlags() uint32 {
 }
 
 func (a *accessPoint) GetWPAFlags() uint32 {
-	return a.getUint32Property(AccessPointPropertyWPAFlags)
+	return a.getUint32Property(AccessPointPropertyWpaFlags)
 }
 
 func (a *accessPoint) GetRSNFlags() uint32 {
-	return a.getUint32Property(AccessPointPropertyRSNFlags)
+	return a.getUint32Property(AccessPointPropertyRsnFlags)
 }
 
 func (a *accessPoint) GetSSID() string {
-	return string(a.getSliceByteProperty(AccessPointPropertySSID))
+	return string(a.getSliceByteProperty(AccessPointPropertySsid))
 }
 
 func (a *accessPoint) GetFrequency() uint32 {
@@ -92,7 +94,7 @@ func (a *accessPoint) GetFrequency() uint32 {
 }
 
 func (a *accessPoint) GetHWAddress() string {
-	return a.getStringProperty(AccessPointPropertyHWAddress)
+	return a.getStringProperty(AccessPointPropertyHwAddress)
 }
 
 func (a *accessPoint) GetMode() Nm80211Mode {

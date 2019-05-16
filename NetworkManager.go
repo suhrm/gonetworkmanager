@@ -10,12 +10,51 @@ const (
 	NetworkManagerInterface  = "org.freedesktop.NetworkManager"
 	NetworkManagerObjectPath = "/org/freedesktop/NetworkManager"
 
-	NetworkManagerGetDevices               = NetworkManagerInterface + ".GetDevices"
-	NetworkManagerGetAllDevices            = NetworkManagerInterface + ".GetAllDevices"
-	NetworkManagerActivateConnection       = NetworkManagerInterface + ".ActivateConnection"
-	NetworkManagerAddAndActivateConnection = NetworkManagerInterface + ".AddAndActivateConnection"
-	NetworkManagerPropertyState            = NetworkManagerInterface + ".State"
-	NetworkManagerPropertyActiveConnection = NetworkManagerInterface + ".ActiveConnections"
+	/* Methods */
+	NetworkManagerReload                          = NetworkManagerInterface + ".Reload"
+	NetworkManagerGetDevices                      = NetworkManagerInterface + ".GetDevices"
+	NetworkManagerGetAllDevices                   = NetworkManagerInterface + ".GetAllDevices"
+	NetworkManagerGetDeviceByIpIface              = NetworkManagerInterface + ".GetDeviceByIpIface"
+	NetworkManagerActivateConnection              = NetworkManagerInterface + ".ActivateConnection"
+	NetworkManagerAddAndActivateConnection        = NetworkManagerInterface + ".AddAndActivateConnection"
+	NetworkManagerAddAndActivateConnection2       = NetworkManagerInterface + ".AddAndActivateConnection2"
+	NetworkManagerDeactivateConnection            = NetworkManagerInterface + ".DeactivateConnection"
+	NetworkManagerSleep                           = NetworkManagerInterface + ".Sleep"
+	NetworkManagerEnable                          = NetworkManagerInterface + ".Enable"
+	NetworkManagerGetPermissions                  = NetworkManagerInterface + ".GetPermissions"
+	NetworkManagerSetLogging                      = NetworkManagerInterface + ".SetLogging"
+	NetworkManagerGetLogging                      = NetworkManagerInterface + ".GetLogging"
+	NetworkManagerCheckConnectivity               = NetworkManagerInterface + ".CheckConnectivity"
+	NetworkManagerstate                           = NetworkManagerInterface + ".state"
+	NetworkManagerCheckpointCreate                = NetworkManagerInterface + ".CheckpointCreate"
+	NetworkManagerCheckpointDestroy               = NetworkManagerInterface + ".CheckpointDestroy"
+	NetworkManagerCheckpointRollback              = NetworkManagerInterface + ".CheckpointRollback"
+	NetworkManagerCheckpointAdjustRollbackTimeout = NetworkManagerInterface + ".CheckpointAdjustRollbackTimeout"
+
+	/* Property */
+	NetworkManagerPropertyDevices                    = NetworkManagerInterface + ".Devices"                    // readable   ao
+	NetworkManagerPropertyAllDevices                 = NetworkManagerInterface + ".AllDevices"                 // readable   ao
+	NetworkManagerPropertyCheckpoints                = NetworkManagerInterface + ".Checkpoints"                // readable   ao
+	NetworkManagerPropertyNetworkingEnabled          = NetworkManagerInterface + ".NetworkingEnabled"          // readable   b
+	NetworkManagerPropertyWirelessEnabled            = NetworkManagerInterface + ".WirelessEnabled"            // readwrite  b
+	NetworkManagerPropertyWirelessHardwareEnabled    = NetworkManagerInterface + ".WirelessHardwareEnabled"    // readable   b
+	NetworkManagerPropertyWwanEnabled                = NetworkManagerInterface + ".WwanEnabled"                // readwrite  b
+	NetworkManagerPropertyWwanHardwareEnabled        = NetworkManagerInterface + ".WwanHardwareEnabled"        // readable   b
+	NetworkManagerPropertyWimaxEnabled               = NetworkManagerInterface + ".WimaxEnabled"               // readwrite  b
+	NetworkManagerPropertyWimaxHardwareEnabled       = NetworkManagerInterface + ".WimaxHardwareEnabled"       // readable   b
+	NetworkManagerPropertyActiveConnections          = NetworkManagerInterface + ".ActiveConnections"          // readable   ao
+	NetworkManagerPropertyPrimaryConnection          = NetworkManagerInterface + ".PrimaryConnection"          // readable   o
+	NetworkManagerPropertyPrimaryConnectionType      = NetworkManagerInterface + ".PrimaryConnectionType"      // readable   s
+	NetworkManagerPropertyMetered                    = NetworkManagerInterface + ".Metered"                    // readable   u
+	NetworkManagerPropertyActivatingConnection       = NetworkManagerInterface + ".ActivatingConnection"       // readable   o
+	NetworkManagerPropertyStartup                    = NetworkManagerInterface + ".Startup"                    // readable   b
+	NetworkManagerPropertyVersion                    = NetworkManagerInterface + ".Version"                    // readable   s
+	NetworkManagerPropertyCapabilities               = NetworkManagerInterface + ".Capabilities"               // readable   au
+	NetworkManagerPropertyState                      = NetworkManagerInterface + ".State"                      // readable   u
+	NetworkManagerPropertyConnectivity               = NetworkManagerInterface + ".Connectivity"               // readable   u
+	NetworkManagerPropertyConnectivityCheckAvailable = NetworkManagerInterface + ".ConnectivityCheckAvailable" // readable   b
+	NetworkManagerPropertyConnectivityCheckEnabled   = NetworkManagerInterface + ".ConnectivityCheckEnabled"   // readwrite  b
+	NetworkManagerPropertyGlobalDnsConfiguration     = NetworkManagerInterface + ".GlobalDnsConfiguration"     // readwrite  a{sv}
 )
 
 type NetworkManager interface {
@@ -104,7 +143,7 @@ func (n *networkManager) GetState() NmState {
 }
 
 func (n *networkManager) GetActiveConnections() []ActiveConnection {
-	acPaths := n.getSliceObjectProperty(NetworkManagerPropertyActiveConnection)
+	acPaths := n.getSliceObjectProperty(NetworkManagerPropertyActiveConnections)
 	ac := make([]ActiveConnection, len(acPaths))
 
 	var err error

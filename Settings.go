@@ -8,11 +8,19 @@ const (
 	SettingsInterface  = NetworkManagerInterface + ".Settings"
 	SettingsObjectPath = NetworkManagerObjectPath + "/Settings"
 
-	SettingsListConnections = SettingsInterface + ".ListConnections"
-	SettingsAddConnection   = SettingsInterface + ".AddConnection"
-	SettingsSaveHostname    = SettingsInterface + ".SaveHostname"
+	/* Methods */
+	SettingsListConnections      = SettingsInterface + ".ListConnections"
+	SettingsGetConnectionByUuid  = SettingsInterface + ".GetConnectionByUuid"
+	SettingsAddConnection        = SettingsInterface + ".AddConnection"
+	SettingsAddConnectionUnsaved = SettingsInterface + ".AddConnectionUnsaved"
+	SettingsLoadConnections      = SettingsInterface + ".LoadConnections"
+	SettingsReloadConnections    = SettingsInterface + ".ReloadConnections"
+	SettingsSaveHostname         = SettingsInterface + ".SaveHostname"
 
-	SettingsHostnameProperty = SettingsInterface + ".Hostname"
+	/* Properties */
+	SettingsPropertyConnections = SettingsInterface + "Connections" // readable   ao
+	SettingsPropertyHostname    = SettingsInterface + "Hostname"    // readable   s
+	SettingsPropertyCanModify   = SettingsInterface + "CanModify"   // readable   b
 )
 
 type Settings interface {
@@ -73,7 +81,7 @@ func (s *settings) SaveHostname(hostname string) {
 }
 
 func (s *settings) Hostname() string {
-	hostname := s.getStringProperty(SettingsHostnameProperty)
+	hostname := s.getStringProperty(SettingsPropertyHostname)
 
 	return hostname
 }
