@@ -2,7 +2,6 @@ package gonetworkmanager
 
 import (
 	"encoding/json"
-
 	"github.com/godbus/dbus"
 )
 
@@ -50,7 +49,7 @@ type IP4RouteData struct {
 	Prefix               uint8
 	NextHop              string
 	Metric               uint8
-	AdditionalAttributes []string
+	AdditionalAttributes map[string]string
 }
 
 type IP4NameserverData struct {
@@ -126,7 +125,18 @@ func (c *ip4Config) GetAddresses() []IP4Address {
 }
 
 func (c *ip4Config) GetAddressData() []IP4AddressData {
-	return []IP4AddressData{}
+	addresses := c.getSliceMapStringVariantProperty(IP4ConfigPropertyAddressData)
+	ret := make([]IP4AddressData, len(addresses))
+
+	for i, address := range addresses {
+		prefix := address["prefix"].Value().(uint32)
+
+		ret[i] = IP4AddressData{
+			Address: address["address"].Value().(string),
+			Prefix:  uint8(prefix),
+		}
+	}
+	return ret
 }
 
 func (c *ip4Config) GetGateway() string {
@@ -151,7 +161,33 @@ func (c *ip4Config) GetRoutes() []IP4Route {
 }
 
 func (c *ip4Config) GetRouteData() []IP4RouteData {
-	return []IP4RouteData{}
+	routesData := c.getSliceMapStringVariantProperty(IP4ConfigPropertyRouteData)
+	routes := make([]IP4RouteData, len(routesData))
+
+	for _, routeData := range routesData {
+
+		route := IP4RouteData{}
+
+		for routeDataAttributeName, routeDataAttribute := range routeData {
+			switch routeDataAttributeName {
+			case "dest":
+				route.Destination = routeDataAttribute.Value().(string)
+			case "prefix":
+				prefix, _ := routeDataAttribute.Value().(uint32)
+				route.Prefix = uint8(prefix)
+			case "next-hop":
+				route.NextHop = routeDataAttribute.Value().(string)
+			case "metric":
+				metric := routeDataAttribute.Value().(uint32)
+				route.Metric = uint8(metric)
+			default:
+				route.AdditionalAttributes[routeDataAttributeName] = routeDataAttribute.String()
+			}
+		}
+
+		routes = append(routes, route)
+	}
+	return routes
 }
 
 // Deprecated: use GetNameserverData
@@ -167,7 +203,18 @@ func (c *ip4Config) GetNameservers() []string {
 }
 
 func (c *ip4Config) GetNameserverData() []IP4NameserverData {
-	return []IP4NameserverData{}
+	nameserversData := c.getSliceMapStringVariantProperty(IP4ConfigPropertyNameserverData)
+	nameservers := make([]IP4NameserverData, len(nameserversData))
+
+	for _, nameserverData := range nameserversData {
+
+		nameserver := IP4NameserverData{
+			Address: nameserverData["address"].Value().(string),
+		}
+
+		nameservers = append(nameservers, nameserver)
+	}
+	return nameservers
 }
 
 func (c *ip4Config) GetDomains() []string {
@@ -192,9 +239,9 @@ func (c *ip4Config) GetWinsServerData() []string {
 
 func (c *ip4Config) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
-		"Addresses":   c.GetAddresses(),
-		"Routes":      c.GetRoutes(),
-		"Nameservers": c.GetNameservers(),
+		"Addresses":   c.GetAddressData(),
+		"Routes":      c.GetRouteData(),
+		"Nameservers": c.GetNameserverData(),
 		"Domains":     c.GetDomains(),
 	})
 }
