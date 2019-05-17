@@ -9,6 +9,12 @@ import (
 const (
 	DeviceInterface = NetworkManagerInterface + ".Device"
 
+	/* Methods */
+	DeviceReapply              = DeviceInterface + ".Reapply"
+	DeviceGetAppliedConnection = DeviceInterface + ".GetAppliedConnection"
+	DeviceDisconnect           = DeviceInterface + ".Disconnect"
+	DeviceDelete               = DeviceInterface + ".Delete"
+
 	/* Properties */
 	DevicePropertyUdi                  = DeviceInterface + ".Udi"                  // readable   s
 	DevicePropertyInterface            = DeviceInterface + ".Interface"            // readable   s
