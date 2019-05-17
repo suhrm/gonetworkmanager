@@ -2,4 +2,4 @@ module github.com/Wifx/gonetworkmanager
 
 go 1.12
 
-require github.com/godbus/dbus v4.1.0+incompatible
+require github.com/godbus/dbus v0.0.0-20181101234600-2ff6f7ffd60f
