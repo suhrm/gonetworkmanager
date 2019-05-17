@@ -49,10 +49,6 @@ type IP6RouteData struct {
 	AdditionalAttributes map[string]string
 }
 
-type IP6NameserverData struct {
-	Address string
-}
-
 type IP6Config interface {
 
 	// Array of IP address data objects. All addresses will include "address" (an IP address string), and "prefix" (a uint). Some addresses may include additional attributes.
@@ -65,7 +61,7 @@ type IP6Config interface {
 	GetRouteData() []IP6RouteData
 
 	// GetNameservers gets the nameservers in use.
-	GetNameservers() []IP6NameserverData
+	GetNameservers() []string
 
 	// A list of domains this address belongs to.
 	GetDomains() []string
@@ -141,19 +137,15 @@ func (c *ip6Config) GetRouteData() []IP6RouteData {
 	return routes
 }
 
-func (c *ip6Config) GetNameservers() []IP6NameserverData {
-	nameserversData := c.getSliceMapStringVariantProperty(IP6ConfigPropertyNameservers)
-	nameservers := make([]IP6NameserverData, len(nameserversData))
+func (c *ip6Config) GetNameservers() []string {
+	nameservers := c.getSliceSliceByteProperty(IP6ConfigPropertyNameservers)
+	ret := make([]string, len(nameservers))
 
-	for _, nameserverData := range nameserversData {
-
-		nameserver := IP6NameserverData{
-			Address: nameserverData["address"].Value().(string),
-		}
-
-		nameservers = append(nameservers, nameserver)
+	for i, nameserver := range nameservers {
+		ret[i] = string(nameserver)
 	}
-	return nameservers
+
+	return ret
 }
 
 func (c *ip6Config) GetDomains() []string {
