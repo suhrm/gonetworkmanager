@@ -46,7 +46,7 @@ type ActiveConnection interface {
 	GetDevices() []Device
 
 	// GetState gets the state of the connection.
-	GetState() uint32
+	GetState() NmActiveConnectionState
 
 	// GetStateFlags gets the state flags of the connection.
 	GetStateFlags() uint32
@@ -119,8 +119,8 @@ func (a *activeConnection) GetDevices() []Device {
 	return devices
 }
 
-func (a *activeConnection) GetState() uint32 {
-	return a.getUint32Property(ActiveConnectionPropertyState)
+func (a *activeConnection) GetState() NmActiveConnectionState {
+	return NmActiveConnectionState(a.getUint32Property(ActiveConnectionPropertyState))
 }
 
 func (a *activeConnection) GetStateFlags() uint32 {

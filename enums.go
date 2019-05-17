@@ -44,6 +44,17 @@ const (
 	NmDeviceStateFailed       NmDeviceState = 120
 )
 
+//go:generate stringer -type=NmActiveConnectionState
+type NmActiveConnectionState uint32
+
+const (
+	NmActiveConnectionStateUnknown      NmActiveConnectionState = 0 // The state of the connection is unknown
+	NmActiveConnectionStateActivating   NmActiveConnectionState = 1 // A network connection is being prepared
+	NmActiveConnectionStateActivated    NmActiveConnectionState = 2 // There is a connection to the network
+	NmActiveConnectionStateDeactivating NmActiveConnectionState = 3 // The network connection is being torn down and cleaned up
+	NmActiveConnectionStateDeactivated  NmActiveConnectionState = 4 // The network connection is disconnected and will be removed
+)
+
 //go:generate stringer -type=NmDeviceType
 type NmDeviceType uint32
 
