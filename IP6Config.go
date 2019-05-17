@@ -2,7 +2,6 @@ package gonetworkmanager
 
 import (
 	"encoding/json"
-
 	"github.com/godbus/dbus"
 )
 
@@ -47,7 +46,7 @@ type IP6RouteData struct {
 	Prefix               uint8
 	NextHop              string
 	Metric               uint8
-	AdditionalAttributes []string
+	AdditionalAttributes map[string]string
 }
 
 type IP6NameserverData struct {
@@ -93,7 +92,19 @@ type ip6Config struct {
 }
 
 func (c *ip6Config) GetAddressData() []IP6AddressData {
-	return []IP6AddressData{}
+
+	addresses := c.getSliceMapStringVariantProperty(IP6ConfigPropertyAddressData)
+	ret := make([]IP6AddressData, len(addresses))
+
+	for i, address := range addresses {
+		prefix := address["prefix"].Value().(uint32)
+
+		ret[i] = IP6AddressData{
+			Address: address["address"].Value().(string),
+			Prefix:  uint8(prefix),
+		}
+	}
+	return ret
 }
 
 func (c *ip6Config) GetGateway() string {
@@ -101,11 +112,48 @@ func (c *ip6Config) GetGateway() string {
 }
 
 func (c *ip6Config) GetRouteData() []IP6RouteData {
-	return []IP6RouteData{}
+	routesData := c.getSliceMapStringVariantProperty(IP6ConfigPropertyRouteData)
+	routes := make([]IP6RouteData, len(routesData))
+
+	for _, routeData := range routesData {
+
+		route := IP6RouteData{}
+
+		for routeDataAttributeName, routeDataAttribute := range routeData {
+			switch routeDataAttributeName {
+			case "dest":
+				route.Destination = routeDataAttribute.Value().(string)
+			case "prefix":
+				prefix, _ := routeDataAttribute.Value().(uint32)
+				route.Prefix = uint8(prefix)
+			case "next-hop":
+				route.NextHop = routeDataAttribute.Value().(string)
+			case "metric":
+				metric := routeDataAttribute.Value().(uint32)
+				route.Metric = uint8(metric)
+			default:
+				route.AdditionalAttributes[routeDataAttributeName] = routeDataAttribute.String()
+			}
+		}
+
+		routes = append(routes, route)
+	}
+	return routes
 }
 
 func (c *ip6Config) GetNameservers() []IP6NameserverData {
-	return []IP6NameserverData{}
+	nameserversData := c.getSliceMapStringVariantProperty(IP6ConfigPropertyNameservers)
+	nameservers := make([]IP6NameserverData, len(nameserversData))
+
+	for _, nameserverData := range nameserversData {
+
+		nameserver := IP6NameserverData{
+			Address: nameserverData["address"].Value().(string),
+		}
+
+		nameservers = append(nameservers, nameserver)
+	}
+	return nameservers
 }
 
 func (c *ip6Config) GetDomains() []string {
