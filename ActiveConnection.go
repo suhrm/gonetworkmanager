@@ -49,7 +49,7 @@ type ActiveConnection interface {
 	GetState() NmActiveConnectionState
 
 	// GetStateFlags gets the state flags of the connection.
-	GetStateFlags() uint32
+	GetStateFlags() NmActivationStateFlag
 
 	// GetDefault gets the default IPv4 flag of the connection.
 	GetDefault() bool
@@ -123,8 +123,8 @@ func (a *activeConnection) GetState() NmActiveConnectionState {
 	return NmActiveConnectionState(a.getUint32Property(ActiveConnectionPropertyState))
 }
 
-func (a *activeConnection) GetStateFlags() uint32 {
-	return a.getUint32Property(ActiveConnectionPropertyStateFlags)
+func (a *activeConnection) GetStateFlags() NmActivationStateFlag {
+	return NmActivationStateFlag(a.getUint32Property(ActiveConnectionPropertyStateFlags))
 }
 
 func (a *activeConnection) GetDefault() bool {

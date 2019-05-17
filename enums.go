@@ -55,6 +55,20 @@ const (
 	NmActiveConnectionStateDeactivated  NmActiveConnectionState = 4 // The network connection is disconnected and will be removed
 )
 
+//go:generate stringer -type=NmActivationStateFlag
+type NmActivationStateFlag uint32
+
+const (
+	NmActivationStateFlagNone                             NmActivationStateFlag = 0x00 // an alias for numeric zero, no flags set.
+	NmActivationStateFlagIsMaster                         NmActivationStateFlag = 0x01 // the device is a master.
+	NmActivationStateFlagIsSlave                          NmActivationStateFlag = 0x02 // the device is a slave.
+	NmActivationStateFlagLayer2Ready                      NmActivationStateFlag = 0x04 // layer2 is activated and ready.
+	NmActivationStateFlagIp4Ready                         NmActivationStateFlag = 0x08 // IPv4 setting is completed.
+	NmActivationStateFlagIp6Ready                         NmActivationStateFlag = 0x10 // IPv6 setting is completed.
+	NmActivationStateFlagMasterHasSlaves                  NmActivationStateFlag = 0x20 // The master has any slave devices attached. This only makes sense if the device is a master.
+	NmActivationStateFlagLifetimeBoundToProfileVisibility NmActivationStateFlag = 0x40 // the lifetime of the activation is bound to the visilibity of the connection profile, which in turn depends on "connection.permissions" and whether a session for the user exists. Since: 1.16
+)
+
 //go:generate stringer -type=NmDeviceType
 type NmDeviceType uint32
 
