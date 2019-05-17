@@ -8,22 +8,22 @@ const (
 	ActiveConnectionInterface = NetworkManagerInterface + ".Connection.Active"
 
 	/* Property */
-	ActiveConnectionProperyConnection     = ActiveConnectionInterface + ".Connection"     // readable   o
-	ActiveConnectionProperySpecificObject = ActiveConnectionInterface + ".SpecificObject" // readable   o
-	ActiveConnectionProperyId             = ActiveConnectionInterface + ".Id"             // readable   s
-	ActiveConnectionProperyUuid           = ActiveConnectionInterface + ".Uuid"           // readable   s
-	ActiveConnectionProperyType           = ActiveConnectionInterface + ".Type"           // readable   s
-	ActiveConnectionProperyDevices        = ActiveConnectionInterface + ".Devices"        // readable   ao
-	ActiveConnectionProperyState          = ActiveConnectionInterface + ".State"          // readable   u
-	ActiveConnectionProperyStateFlags     = ActiveConnectionInterface + ".StateFlags"     // readable   u
-	ActiveConnectionProperyDefault        = ActiveConnectionInterface + ".Default"        // readable   b
-	ActiveConnectionProperyIp4Config      = ActiveConnectionInterface + ".Ip4Config"      // readable   o
-	ActiveConnectionProperyDhcp4Config    = ActiveConnectionInterface + ".Dhcp4Config"    // readable   o
-	ActiveConnectionProperyDefault6       = ActiveConnectionInterface + ".Default6"       // readable   b
-	ActiveConnectionProperyIp6Config      = ActiveConnectionInterface + ".Ip6Config"      // readable   o
-	ActiveConnectionProperyDhcp6Config    = ActiveConnectionInterface + ".Dhcp6Config"    // readable   o
-	ActiveConnectionProperyVpn            = ActiveConnectionInterface + ".Vpn"            // readable   b
-	ActiveConnectionProperyMaster         = ActiveConnectionInterface + ".Master"         // readable   o
+	ActiveConnectionPropertyConnection     = ActiveConnectionInterface + ".Connection"     // readable   o
+	ActiveConnectionPropertySpecificObject = ActiveConnectionInterface + ".SpecificObject" // readable   o
+	ActiveConnectionPropertyId             = ActiveConnectionInterface + ".Id"             // readable   s
+	ActiveConnectionPropertyUuid           = ActiveConnectionInterface + ".Uuid"           // readable   s
+	ActiveConnectionPropertyType           = ActiveConnectionInterface + ".Type"           // readable   s
+	ActiveConnectionPropertyDevices        = ActiveConnectionInterface + ".Devices"        // readable   ao
+	ActiveConnectionPropertyState          = ActiveConnectionInterface + ".State"          // readable   u
+	ActiveConnectionPropertyStateFlags     = ActiveConnectionInterface + ".StateFlags"     // readable   u
+	ActiveConnectionPropertyDefault        = ActiveConnectionInterface + ".Default"        // readable   b
+	ActiveConnectionPropertyIp4Config      = ActiveConnectionInterface + ".Ip4Config"      // readable   o
+	ActiveConnectionPropertyDhcp4Config    = ActiveConnectionInterface + ".Dhcp4Config"    // readable   o
+	ActiveConnectionPropertyDefault6       = ActiveConnectionInterface + ".Default6"       // readable   b
+	ActiveConnectionPropertyIp6Config      = ActiveConnectionInterface + ".Ip6Config"      // readable   o
+	ActiveConnectionPropertyDhcp6Config    = ActiveConnectionInterface + ".Dhcp6Config"    // readable   o
+	ActiveConnectionPropertyVpn            = ActiveConnectionInterface + ".Vpn"            // readable   b
+	ActiveConnectionPropertyMaster         = ActiveConnectionInterface + ".Master"         // readable   o
 )
 
 type ActiveConnection interface {
@@ -77,7 +77,7 @@ type activeConnection struct {
 }
 
 func (a *activeConnection) GetConnection() Connection {
-	path := a.getObjectProperty(ActiveConnectionProperyConnection)
+	path := a.getObjectProperty(ActiveConnectionPropertyConnection)
 	con, err := NewConnection(path)
 	if err != nil {
 		panic(err)
@@ -86,7 +86,7 @@ func (a *activeConnection) GetConnection() Connection {
 }
 
 func (a *activeConnection) GetSpecificObject() AccessPoint {
-	path := a.getObjectProperty(ActiveConnectionProperySpecificObject)
+	path := a.getObjectProperty(ActiveConnectionPropertySpecificObject)
 	ap, err := NewAccessPoint(path)
 	if err != nil {
 		panic(err)
@@ -95,19 +95,19 @@ func (a *activeConnection) GetSpecificObject() AccessPoint {
 }
 
 func (a *activeConnection) GetID() string {
-	return a.getStringProperty(ActiveConnectionProperyId)
+	return a.getStringProperty(ActiveConnectionPropertyId)
 }
 
 func (a *activeConnection) GetUUID() string {
-	return a.getStringProperty(ActiveConnectionProperyUuid)
+	return a.getStringProperty(ActiveConnectionPropertyUuid)
 }
 
 func (a *activeConnection) GetType() string {
-	return a.getStringProperty(ActiveConnectionProperyType)
+	return a.getStringProperty(ActiveConnectionPropertyType)
 }
 
 func (a *activeConnection) GetDevices() []Device {
-	paths := a.getSliceObjectProperty(ActiveConnectionProperyDevices)
+	paths := a.getSliceObjectProperty(ActiveConnectionPropertyDevices)
 	devices := make([]Device, len(paths))
 	var err error
 	for i, path := range paths {
@@ -120,20 +120,20 @@ func (a *activeConnection) GetDevices() []Device {
 }
 
 func (a *activeConnection) GetState() uint32 {
-	return a.getUint32Property(ActiveConnectionProperyState)
+	return a.getUint32Property(ActiveConnectionPropertyState)
 }
 
 func (a *activeConnection) GetStateFlags() uint32 {
-	return a.getUint32Property(ActiveConnectionProperyStateFlags)
+	return a.getUint32Property(ActiveConnectionPropertyStateFlags)
 }
 
 func (a *activeConnection) GetDefault() bool {
-	b := a.getProperty(ActiveConnectionProperyDefault)
+	b := a.getProperty(ActiveConnectionPropertyDefault)
 	return b.(bool)
 }
 
 func (a *activeConnection) GetIP4Config() IP4Config {
-	path := a.getObjectProperty(ActiveConnectionProperyIp4Config)
+	path := a.getObjectProperty(ActiveConnectionPropertyIp4Config)
 	r, err := NewIP4Config(path)
 	if err != nil {
 		panic(err)
@@ -142,7 +142,7 @@ func (a *activeConnection) GetIP4Config() IP4Config {
 }
 
 func (a *activeConnection) GetDHCP4Config() DHCP4Config {
-	path := a.getObjectProperty(ActiveConnectionProperyDhcp4Config)
+	path := a.getObjectProperty(ActiveConnectionPropertyDhcp4Config)
 	r, err := NewDHCP4Config(path)
 	if err != nil {
 		panic(err)
@@ -151,12 +151,12 @@ func (a *activeConnection) GetDHCP4Config() DHCP4Config {
 }
 
 func (a *activeConnection) GetVPN() bool {
-	ret := a.getProperty(ActiveConnectionProperyVpn)
+	ret := a.getProperty(ActiveConnectionPropertyVpn)
 	return ret.(bool)
 }
 
 func (a *activeConnection) GetMaster() Device {
-	path := a.getObjectProperty(ActiveConnectionProperyMaster)
+	path := a.getObjectProperty(ActiveConnectionPropertyMaster)
 	r, err := DeviceFactory(path)
 	if err != nil {
 		panic(err)
