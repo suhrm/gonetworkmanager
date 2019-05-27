@@ -143,6 +143,10 @@ func (a *activeConnection) GetDefault() bool {
 
 func (a *activeConnection) GetIP4Config() IP4Config {
 	path := a.getObjectProperty(ActiveConnectionPropertyIp4Config)
+	if path == "/" {
+		return nil
+	}
+
 	r, err := NewIP4Config(path)
 	if err != nil {
 		panic(err)
@@ -152,6 +156,10 @@ func (a *activeConnection) GetIP4Config() IP4Config {
 
 func (a *activeConnection) GetDHCP4Config() DHCP4Config {
 	path := a.getObjectProperty(ActiveConnectionPropertyDhcp4Config)
+	if path == "/" {
+		return nil
+	}
+
 	r, err := NewDHCP4Config(path)
 	if err != nil {
 		panic(err)
@@ -166,6 +174,10 @@ func (a *activeConnection) GetDefault6() bool {
 
 func (a *activeConnection) GetIP6Config() IP6Config {
 	path := a.getObjectProperty(ActiveConnectionPropertyIp6Config)
+	if path == "/" {
+		return nil
+	}
+
 	r, err := NewIP6Config(path)
 	if err != nil {
 		panic(err)
@@ -175,6 +187,10 @@ func (a *activeConnection) GetIP6Config() IP6Config {
 
 //func (a *activeConnection) GetDHCP6Config() DHCP6Config {
 //	path := a.getObjectProperty(ActiveConnectionPropertyDhcp6Config)
+//	if path == "/" {
+//		return nil
+//	}
+
 //	r, err := NewDHCP6Config(path)
 //	if err != nil {
 //		panic(err)
