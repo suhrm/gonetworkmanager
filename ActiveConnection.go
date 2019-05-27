@@ -67,7 +67,7 @@ type ActiveConnection interface {
 	GetIP6Config() IP6Config
 
 	// GetDHCP6Config gets the DHCP4Config of the connection.
-	//GetDHCP6Config() DHCP6Config
+	GetDHCP6Config() DHCP6Config
 
 	// GetVPN gets the VPN flag of the connection.
 	GetVPN() bool
@@ -185,18 +185,18 @@ func (a *activeConnection) GetIP6Config() IP6Config {
 	return r
 }
 
-//func (a *activeConnection) GetDHCP6Config() DHCP6Config {
-//	path := a.getObjectProperty(ActiveConnectionPropertyDhcp6Config)
-//	if path == "/" {
-//		return nil
-//	}
+func (a *activeConnection) GetDHCP6Config() DHCP6Config {
+	path := a.getObjectProperty(ActiveConnectionPropertyDhcp6Config)
+	if path == "/" {
+		return nil
+	}
 
-//	r, err := NewDHCP6Config(path)
-//	if err != nil {
-//		panic(err)
-//	}
-//	return r
-//}
+	r, err := NewDHCP6Config(path)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
 
 func (a *activeConnection) GetVPN() bool {
 	ret := a.getProperty(ActiveConnectionPropertyVpn)
