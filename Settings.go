@@ -18,9 +18,9 @@ const (
 	SettingsSaveHostname         = SettingsInterface + ".SaveHostname"
 
 	/* Properties */
-	SettingsPropertyConnections = SettingsInterface + "Connections" // readable   ao
-	SettingsPropertyHostname    = SettingsInterface + "Hostname"    // readable   s
-	SettingsPropertyCanModify   = SettingsInterface + "CanModify"   // readable   b
+	SettingsPropertyConnections = SettingsInterface + ".Connections" // readable   ao
+	SettingsPropertyHostname    = SettingsInterface + ".Hostname"    // readable   s
+	SettingsPropertyCanModify   = SettingsInterface + ".CanModify"   // readable   b
 )
 
 type Settings interface {
