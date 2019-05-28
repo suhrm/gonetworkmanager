@@ -62,6 +62,9 @@ func DeviceFactory(objectPath dbus.ObjectPath) (Device, error) {
 type Device interface {
 	GetPath() dbus.ObjectPath
 
+	// Disconnects a device and prevents the device from automatically activating further connections without user intervention.
+	Disconnect() error
+
 	// Operating-system specific transient device hardware identifier. This is an opaque string representing the underlying hardware for the device, and shouldn't be used to keep track of individual devices. For some device types (Bluetooth, Modems) it is an identifier used by the hardware service (ie bluez or ModemManager) to refer to that device, and client programs use it get additional information from those services which NM does not provide. The Udi is not guaranteed to be consistent across reboots or hotplugs of the hardware. If you're looking for a way to uniquely track each device in your application, use the object path. If you're looking for a way to track a specific piece of hardware across reboot or hotplug, use a MAC address or USB serial number.
 	GetUdi() string
 
@@ -112,6 +115,10 @@ type device struct {
 
 func (d *device) GetPath() dbus.ObjectPath {
 	return d.obj.Path()
+}
+
+func (d *device) Disconnect() error {
+	return d.call(DeviceDisconnect)
 }
 
 func (d *device) GetUdi() string {
