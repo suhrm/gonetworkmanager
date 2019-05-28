@@ -34,7 +34,7 @@ type Connection interface {
 	// GetSettings gets the settings maps describing this network configuration.
 	// This will never include any secrets required for connection to the
 	// network, as those are often protected. Secrets must be requested
-	// separately using the GetSecrets() callAndPanic.
+	// separately using the GetSecrets() callWithReturnAndPanic.
 	GetSettings() ConnectionSettings
 
 	MarshalJSON() ([]byte, error)
@@ -55,7 +55,7 @@ func (c *connection) GetPath() dbus.ObjectPath {
 
 func (c *connection) GetSettings() ConnectionSettings {
 	var settings map[string]map[string]dbus.Variant
-	c.callAndPanic(&settings, ConnectionGetSettings)
+	c.callWithReturnAndPanic(&settings, ConnectionGetSettings)
 
 	rv := make(ConnectionSettings)
 

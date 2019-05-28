@@ -107,7 +107,7 @@ type networkManager struct {
 func (n *networkManager) GetDevices() []Device {
 	var devicePaths []dbus.ObjectPath
 
-	n.callAndPanic(&devicePaths, NetworkManagerGetDevices)
+	n.callWithReturnAndPanic(&devicePaths, NetworkManagerGetDevices)
 	devices := make([]Device, len(devicePaths))
 
 	var err error
@@ -124,7 +124,7 @@ func (n *networkManager) GetDevices() []Device {
 func (n *networkManager) GetAllDevices() []Device {
 	var devicePaths []dbus.ObjectPath
 
-	n.callAndPanic(&devicePaths, NetworkManagerGetAllDevices)
+	n.callWithReturnAndPanic(&devicePaths, NetworkManagerGetAllDevices)
 	devices := make([]Device, len(devicePaths))
 
 	var err error
@@ -159,7 +159,7 @@ func (n *networkManager) GetActiveConnections() []ActiveConnection {
 
 func (n *networkManager) ActivateWirelessConnection(c Connection, d Device, ap AccessPoint) ActiveConnection {
 	var opath dbus.ObjectPath
-	n.callAndPanic(&opath, NetworkManagerActivateConnection, c.GetPath(), d.GetPath(), ap.GetPath())
+	n.callWithReturnAndPanic(&opath, NetworkManagerActivateConnection, c.GetPath(), d.GetPath(), ap.GetPath())
 	return nil
 }
 

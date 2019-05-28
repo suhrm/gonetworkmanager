@@ -27,7 +27,7 @@ type Settings interface {
 	// ListConnections gets list the saved network connections known to NetworkManager
 	ListConnections() []Connection
 
-	// AddConnection callAndPanic new connection and save it to disk.
+	// AddConnection callWithReturnAndPanic new connection and save it to disk.
 	AddConnection(settings ConnectionSettings) Connection
 
 	// Save the hostname to persistent configuration.
@@ -49,7 +49,7 @@ type settings struct {
 func (s *settings) ListConnections() []Connection {
 	var connectionPaths []dbus.ObjectPath
 
-	s.callAndPanic(&connectionPaths, SettingsListConnections)
+	s.callWithReturnAndPanic(&connectionPaths, SettingsListConnections)
 	connections := make([]Connection, len(connectionPaths))
 
 	var err error
@@ -65,7 +65,7 @@ func (s *settings) ListConnections() []Connection {
 
 func (s *settings) AddConnection(settings ConnectionSettings) Connection {
 	var path dbus.ObjectPath
-	s.callAndPanic(&path, SettingsAddConnection, settings)
+	s.callWithReturnAndPanic(&path, SettingsAddConnection, settings)
 	con, err := NewConnection(path)
 	if err != nil {
 		panic(err)
