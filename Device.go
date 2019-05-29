@@ -23,7 +23,6 @@ const (
 	DevicePropertyDriverVersion        = DeviceInterface + ".DriverVersion"        // readable   s
 	DevicePropertyFirmwareVersion      = DeviceInterface + ".FirmwareVersion"      // readable   s
 	DevicePropertyCapabilities         = DeviceInterface + ".Capabilities"         // readable   u
-	DevicePropertyIp4Address           = DeviceInterface + ".Ip4Address"           // readable   u
 	DevicePropertyState                = DeviceInterface + ".State"                // readable   u
 	DevicePropertyStateReason          = DeviceInterface + ".StateReason"          // readable   (uu)
 	DevicePropertyActiveConnection     = DeviceInterface + ".ActiveConnection"     // readable   o
@@ -77,6 +76,15 @@ type Device interface {
 	// The name of the device's data interface when available. This property may not refer to the actual data interface until the device has successfully established a data connection, indicated by the device's State becoming ACTIVATED. Note that non UTF-8 characters are backslash escaped, so the resulting name may be longer then 15 characters. Use g_strcompress() to revert the escaping.
 	GetIpInterface() string
 
+	// The driver handling the device. Non-UTF-8 sequences are backslash escaped. Use g_strcompress() to revert.
+	GetDriver() string
+
+	// The version of the driver handling the device. Non-UTF-8 sequences are backslash escaped. Use g_strcompress() to revert.
+	GetDriverVersion() string
+
+	// The firmware version for the device. Non-UTF-8 sequences are backslash escaped. Use g_strcompress() to revert.
+	GetFirmwareVersion() string
+
 	// The current state of the device.
 	GetState() NmDeviceState
 
@@ -92,6 +100,12 @@ type Device interface {
 	// If TRUE, indicates the device is allowed to autoconnect. If FALSE, manual intervention is required before the device will automatically connect to a known network, such as activating a connection using the device, or setting this property to TRUE. This property cannot be set to TRUE for default-unmanaged devices, since they never autoconnect.
 	GetAutoConnect() bool
 
+	// If TRUE, indicates the device is likely missing firmware necessary for its operation.
+	GetFirmwareMissing() bool
+
+	// If TRUE, indicates the NetworkManager plugin for the device is likely missing or misconfigured.
+	GetNmPluginMissing() bool
+
 	// The general type of the network device; ie Ethernet, Wi-Fi, etc.
 	GetDeviceType() NmDeviceType
 
@@ -103,6 +117,9 @@ type Device interface {
 
 	// The device MTU (maximum transmission unit).
 	GetMtu() uint32
+
+	// True if the device exists, or False for placeholder devices that do not yet exist but could be automatically created by NetworkManager if one of their AvailableConnections was activated.
+	GetReal() bool
 
 	MarshalJSON() ([]byte, error)
 }
@@ -138,6 +155,18 @@ func (d *device) GetInterface() string {
 
 func (d *device) GetIpInterface() string {
 	return d.getStringProperty(DevicePropertyIpInterface)
+}
+
+func (d *device) GetDriver() string {
+	return d.getStringProperty(DevicePropertyDriver)
+}
+
+func (d *device) GetDriverVersion() string {
+	return d.getStringProperty(DevicePropertyDriverVersion)
+}
+
+func (d *device) GetFirmwareVersion() string {
+	return d.getStringProperty(DevicePropertyFirmwareVersion)
 }
 
 func (d *device) GetState() NmDeviceState {
@@ -180,6 +209,14 @@ func (d *device) GetAutoConnect() bool {
 	return d.getBoolProperty(DevicePropertyAutoconnect)
 }
 
+func (d *device) GetFirmwareMissing() bool {
+	return d.getBoolProperty(DevicePropertyFirmwareMissing)
+}
+
+func (d *device) GetNmPluginMissing() bool {
+	return d.getBoolProperty(DevicePropertyNmPluginMissing)
+}
+
 func (d *device) GetDeviceType() NmDeviceType {
 	return NmDeviceType(d.getUint32Property(DevicePropertyDeviceType))
 }
@@ -205,6 +242,10 @@ func (d *device) GetPhysicalPortId() string {
 
 func (d *device) GetMtu() uint32 {
 	return d.getUint32Property(DevicePropertyMtu)
+}
+
+func (d *device) GetReal() bool {
+	return d.getBoolProperty(DevicePropertyReal)
 }
 
 func (d *device) marshalMap() map[string]interface{} {
