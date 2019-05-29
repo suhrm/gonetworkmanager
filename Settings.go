@@ -30,8 +30,14 @@ type Settings interface {
 	// AddConnection callWithReturnAndPanic new connection and save it to disk.
 	AddConnection(settings ConnectionSettings) Connection
 
+	// Add new connection but do not save it to disk immediately. This operation does not start the network connection unless (1) device is idle and able to connect to the network described by the new connection, and (2) the connection is allowed to be started automatically. Use the 'Save' method on the connection to save these changes to disk. Note that unsaved changes will be lost if the connection is reloaded from disk (either automatically on file change or due to an explicit ReloadConnections call).
+	AddConnectionUnsaved(settings ConnectionSettings) Connection
+
 	// Save the hostname to persistent configuration.
 	SaveHostname(hostname string)
+
+	// If true, adding and modifying connections is supported.
+	CanModify() bool
 
 	// The machine hostname stored in persistent configuration.
 	Hostname() string
@@ -73,6 +79,16 @@ func (s *settings) AddConnection(settings ConnectionSettings) Connection {
 	return con
 }
 
+func (s *settings) AddConnectionUnsaved(settings ConnectionSettings) Connection {
+	var path dbus.ObjectPath
+	s.callWithReturnAndPanic(&path, SettingsAddConnectionUnsaved, settings)
+	con, err := NewConnection(path)
+	if err != nil {
+		panic(err)
+	}
+	return con
+}
+
 func (s *settings) SaveHostname(hostname string) {
 	err := s.call(SettingsSaveHostname, hostname)
 	if err != nil {
@@ -84,4 +100,8 @@ func (s *settings) Hostname() string {
 	hostname := s.getStringProperty(SettingsPropertyHostname)
 
 	return hostname
+}
+
+func (s *settings) CanModify() bool {
+	return s.getBoolProperty(SettingsPropertyCanModify)
 }
