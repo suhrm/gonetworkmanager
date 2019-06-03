@@ -90,6 +90,9 @@ type NetworkManager interface {
 	// connection["802-11-wireless-security"]["psk"] = password
 	AddAndActivateWirelessConnection(connection map[string]map[string]interface{}, device Device, accessPoint AccessPoint) (ac ActiveConnection, err error)
 
+	// Deactivate an active connection.
+	DeactivateConnection(connection Connection) error
+
 	Subscribe() <-chan *dbus.Signal
 	Unsubscribe()
 
@@ -192,6 +195,10 @@ func (n *networkManager) AddAndActivateWirelessConnection(connection map[string]
 		return
 	}
 	return
+}
+
+func (n *networkManager) DeactivateConnection(c Connection) error {
+	return n.call(NetworkManagerDeactivateConnection, c.GetPath())
 }
 
 func (n *networkManager) Subscribe() <-chan *dbus.Signal {
