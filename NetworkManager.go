@@ -76,8 +76,8 @@ type NetworkManager interface {
 	ActivateWirelessConnection(connection Connection, device Device, accessPoint AccessPoint) ActiveConnection
 
 	// AddAndActivateWirelessConnection adds a new connection profile to the network device it has been
-	// passed. It then activates the connection to the passed access point. The first paramter contains
-	// additional information for the connection (most propably the credentials).
+	// passed. It then activates the connection to the passed access point. The first parameter contains
+	// additional information for the connection (most probably the credentials).
 	// Example contents for connection are:
 	// connection := make(map[string]map[string]interface{})
 	// connection["802-11-wireless"] = make(map[string]interface{})
