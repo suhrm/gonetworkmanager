@@ -94,6 +94,12 @@ type Device interface {
 	// Object path of the Dhcp4Config object describing the DHCP options returned by the DHCP server. Only valid when the device is in the NM_DEVICE_STATE_ACTIVATED state.
 	GetDHCP4Config() DHCP4Config
 
+	// Object path of the Ip6Config object describing the configuration of the device. Only valid when the device is in the NM_DEVICE_STATE_ACTIVATED state.
+	GetIP6Config() IP6Config
+
+	// Object path of the Dhcp6Config object describing the DHCP options returned by the DHCP server. Only valid when the device is in the NM_DEVICE_STATE_ACTIVATED state.
+	GetDHCP6Config() DHCP6Config
+
 	// Whether or not this device is managed by NetworkManager. Setting this property has a similar effect to configuring the device as unmanaged via the keyfile.unmanaged-devices setting in NetworkManager.conf. Changes to this value are not persistent and lost after NetworkManager restart.
 	GetManaged() bool
 
@@ -194,6 +200,34 @@ func (d *device) GetDHCP4Config() DHCP4Config {
 	}
 
 	cfg, err := NewDHCP4Config(path)
+	if err != nil {
+		panic(err)
+	}
+
+	return cfg
+}
+
+func (d *device) GetIP6Config() IP6Config {
+	path := d.getObjectProperty(DevicePropertyIp6Config)
+	if path == "/" {
+		return nil
+	}
+
+	cfg, err := NewIP6Config(path)
+	if err != nil {
+		panic(err)
+	}
+
+	return cfg
+}
+
+func (d *device) GetDHCP6Config() DHCP6Config {
+	path := d.getObjectProperty(DevicePropertyDhcp6Config)
+	if path == "/" {
+		return nil
+	}
+
+	cfg, err := NewDHCP6Config(path)
 	if err != nil {
 		panic(err)
 	}
