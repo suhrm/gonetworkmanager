@@ -72,6 +72,9 @@ type NetworkManager interface {
 	// GetActiveConnections returns the active connection of network devices.
 	GetActiveConnections() []ActiveConnection
 
+	// Activate a connection using the supplied device.
+	ActivateConnection(connection Connection, device Device) ActiveConnection
+
 	// ActivateWirelessConnection requests activating access point to network device
 	ActivateWirelessConnection(connection Connection, device Device, accessPoint AccessPoint) ActiveConnection
 
@@ -155,6 +158,18 @@ func (n *networkManager) GetActiveConnections() []ActiveConnection {
 	}
 
 	return ac
+}
+
+func (n *networkManager) ActivateConnection(c Connection, d Device) ActiveConnection {
+	var opath dbus.ObjectPath
+	n.callWithReturnAndPanic(&opath, NetworkManagerActivateConnection, c.GetPath(), d.GetPath(), dbus.ObjectPath("/"))
+
+	activeConnection, err := NewActiveConnection(opath)
+	if err != nil {
+		panic(err)
+	}
+
+	return activeConnection
 }
 
 func (n *networkManager) ActivateWirelessConnection(c Connection, d Device, ap AccessPoint) ActiveConnection {
