@@ -2,7 +2,6 @@ package gonetworkmanager
 
 import (
 	"encoding/json"
-
 	"github.com/godbus/dbus"
 )
 
@@ -74,6 +73,9 @@ type NetworkManager interface {
 
 	// Activate a connection using the supplied device.
 	ActivateConnection(connection Connection, device Device) ActiveConnection
+
+	// Adds a new connection using the given details (if any) as a template (automatically filling in missing settings with the capabilities of the given device), then activate the new connection. Cannot be used for VPN connections at this time.
+	AddAndActivateConnection(connection map[string]map[string]interface{}, device Device) (ac ActiveConnection, err error)
 
 	// ActivateWirelessConnection requests activating access point to network device
 	ActivateWirelessConnection(connection Connection, device Device, accessPoint AccessPoint) ActiveConnection
@@ -173,6 +175,22 @@ func (n *networkManager) ActivateConnection(c Connection, d Device) ActiveConnec
 	}
 
 	return activeConnection
+}
+
+func (n *networkManager) AddAndActivateConnection(connection map[string]map[string]interface{}, d Device) (ac ActiveConnection, err error) {
+	var opath1 dbus.ObjectPath
+	var opath2 dbus.ObjectPath
+
+	err = n.callWithReturn2(&opath1, &opath2, NetworkManagerAddAndActivateConnection, connection, d.GetPath())
+	if err != nil {
+		return
+	}
+
+	ac, err = NewActiveConnection(opath2)
+	if err != nil {
+		return
+	}
+	return
 }
 
 func (n *networkManager) ActivateWirelessConnection(c Connection, d Device, ap AccessPoint) ActiveConnection {
