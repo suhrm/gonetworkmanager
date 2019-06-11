@@ -7,13 +7,13 @@ import (
 )
 
 const (
-	WirelessDeviceInterface = DeviceInterface + ".Wireless"
+	DeviceWirelessInterface = DeviceInterface + ".Wireless"
 
-	WirelessDeviceGetAccessPoints = WirelessDeviceInterface + ".GetAccessPoints"
-	WirelessDeviceRequestScan     = WirelessDeviceInterface + ".RequestScan"
+	DeviceWirelessGetAccessPoints = DeviceWirelessInterface + ".GetAccessPoints"
+	DeviceWirelessRequestScan     = DeviceWirelessInterface + ".RequestScan"
 )
 
-type WirelessDevice interface {
+type DeviceWireless interface {
 	Device
 
 	// GetAccessPoints gets the list of access points visible to this device.
@@ -25,19 +25,19 @@ type WirelessDevice interface {
 	RequestScan()
 }
 
-func NewWirelessDevice(objectPath dbus.ObjectPath) (WirelessDevice, error) {
-	var d wirelessDevice
+func NewDeviceWireless(objectPath dbus.ObjectPath) (DeviceWireless, error) {
+	var d deviceWireless
 	return &d, d.init(NetworkManagerInterface, objectPath)
 }
 
-type wirelessDevice struct {
+type deviceWireless struct {
 	device
 }
 
-func (d *wirelessDevice) GetAccessPoints() []AccessPoint {
+func (d *deviceWireless) GetAccessPoints() []AccessPoint {
 	var apPaths []dbus.ObjectPath
 
-	d.callWithReturnAndPanic(&apPaths, WirelessDeviceGetAccessPoints)
+	d.callWithReturnAndPanic(&apPaths, DeviceWirelessGetAccessPoints)
 	aps := make([]AccessPoint, len(apPaths))
 
 	var err error
@@ -51,12 +51,12 @@ func (d *wirelessDevice) GetAccessPoints() []AccessPoint {
 	return aps
 }
 
-func (d *wirelessDevice) RequestScan() {
+func (d *deviceWireless) RequestScan() {
 	var options map[string]interface{}
-	d.obj.Call(WirelessDeviceRequestScan, 0, options).Store()
+	d.obj.Call(DeviceWirelessRequestScan, 0, options).Store()
 }
 
-func (d *wirelessDevice) MarshalJSON() ([]byte, error) {
+func (d *deviceWireless) MarshalJSON() ([]byte, error) {
 	m := d.device.marshalMap()
 	m["AccessPoints"] = d.GetAccessPoints()
 	return json.Marshal(m)

@@ -52,7 +52,7 @@ func DeviceFactory(objectPath dbus.ObjectPath) (Device, error) {
 
 	switch d.GetDeviceType() {
 	case NmDeviceTypeWifi:
-		return NewWirelessDevice(objectPath)
+		return NewDeviceWireless(objectPath)
 	}
 
 	return d, nil
