@@ -24,7 +24,7 @@ const (
 	NetworkManagerSetLogging                      = NetworkManagerInterface + ".SetLogging"
 	NetworkManagerGetLogging                      = NetworkManagerInterface + ".GetLogging"
 	NetworkManagerCheckConnectivity               = NetworkManagerInterface + ".CheckConnectivity"
-	NetworkManagerstate                           = NetworkManagerInterface + ".state"
+	NetworkManagerState                           = NetworkManagerInterface + ".state"
 	NetworkManagerCheckpointCreate                = NetworkManagerInterface + ".CheckpointCreate"
 	NetworkManagerCheckpointDestroy               = NetworkManagerInterface + ".CheckpointDestroy"
 	NetworkManagerCheckpointRollback              = NetworkManagerInterface + ".CheckpointRollback"
@@ -57,28 +57,32 @@ const (
 )
 
 type NetworkManager interface {
+	/* METHODS */
+
+	// Reload NetworkManager's configuration and perform certain updates, like flushing a cache or rewriting external state to disk. This is similar to sending SIGHUP to NetworkManager but it allows for more fine-grained control over what to reload (see flags). It also allows non-root access via PolicyKit and contrary to signals it is synchronous.
+	// No flags (0x00) means to reload everything that is supported which is identical to sending a SIGHUP.
+	// (0x01) means to reload the NetworkManager.conf configuration from disk. Note that this does not include connections, which can be reloaded via Setting's ReloadConnections.
+	// (0x02) means to update DNS configuration, which usually involves writing /etc/resolv.conf anew.
+	// (0x04) means to restart the DNS plugin. This is for example useful when using dnsmasq plugin, which uses additional configuration in /etc/NetworkManager/dnsmasq.d. If you edit those files, you can restart the DNS plugin. This action shortly interrupts name resolution. Note that flags may affect each other. For example, restarting the DNS plugin (0x04) implicitly updates DNS too (0x02). Or when reloading the configuration (0x01), changes to DNS setting also cause a DNS update (0x02). However, (0x01) does not involve restarting the DNS plugin (0x04) or update resolv.conf (0x02), unless the DNS related configuration changes in NetworkManager.conf.
+	Reload(flags uint32) error
+
 	// Get the list of realized network devices.
-	GetDevices() []Device
+	GetDevices() ([]Device, error)
 
 	// Get the list of all network devices.
-	GetAllDevices() []Device
+	GetAllDevices() ([]Device, error)
 
-	// GetState returns the overall networking state as determined by the
-	// NetworkManager daemon, based on the state of network devices under it's
-	// management.
-	GetState() NmState
-
-	// GetActiveConnections returns the active connection of network devices.
-	GetActiveConnections() []ActiveConnection
+	// Return the object path of the network device referenced by its IP interface name. Note that some devices (usually modems) only have an IP interface name when they are connected.
+	GetDeviceByIpIface(interfaceId string) (Device, error)
 
 	// Activate a connection using the supplied device.
-	ActivateConnection(connection Connection, device Device) ActiveConnection
+	ActivateConnection(connection Connection, device Device) (ActiveConnection, error)
 
 	// Adds a new connection using the given details (if any) as a template (automatically filling in missing settings with the capabilities of the given device), then activate the new connection. Cannot be used for VPN connections at this time.
-	AddAndActivateConnection(connection map[string]map[string]interface{}, device Device) (ac ActiveConnection, err error)
+	AddAndActivateConnection(connection map[string]map[string]interface{}, device Device) (ActiveConnection, error)
 
 	// ActivateWirelessConnection requests activating access point to network device
-	ActivateWirelessConnection(connection Connection, device Device, accessPoint AccessPoint) ActiveConnection
+	ActivateWirelessConnection(connection Connection, device Device, accessPoint AccessPoint) (ActiveConnection, error)
 
 	// AddAndActivateWirelessConnection adds a new connection profile to the network device it has been
 	// passed. It then activates the connection to the passed access point. The first parameter contains
@@ -90,10 +94,116 @@ type NetworkManager interface {
 	// connection["802-11-wireless-security"] = make(map[string]interface{})
 	// connection["802-11-wireless-security"]["key-mgmt"] = "wpa-psk"
 	// connection["802-11-wireless-security"]["psk"] = password
-	AddAndActivateWirelessConnection(connection map[string]map[string]interface{}, device Device, accessPoint AccessPoint) (ac ActiveConnection, err error)
+	AddAndActivateWirelessConnection(connection map[string]map[string]interface{}, device Device, accessPoint AccessPoint) (ActiveConnection, error)
 
 	// Deactivate an active connection.
 	DeactivateConnection(connection Connection) error
+
+	// Control the NetworkManager daemon's sleep state. When asleep, all interfaces that it manages are deactivated. When awake, devices are available to be activated. This command should not be called directly by users or clients; it is intended for system suspend/resume tracking.
+	// sleepnWake: Indicates whether the NetworkManager daemon should sleep or wake.
+	Sleep(sleepNWake bool) error
+
+	// Control whether overall networking is enabled or disabled. When disabled, all interfaces that NM manages are deactivated. When enabled, all managed interfaces are re-enabled and available to be activated. This command should be used by clients that provide to users the ability to enable/disable all networking.
+	// enableNDisable: If FALSE, indicates that all networking should be disabled. If TRUE, indicates that NetworkManager should begin managing network devices.
+	Enable(enableNDisable bool) error
+
+	// Re-check the network connectivity state.
+	CheckConnectivity() error
+
+	// The overall networking state as determined by the NetworkManager daemon, based on the state of network devices under its management.
+	State() (NmState, error)
+
+	// Create a checkpoint of the current networking configuration for given interfaces. If rollback_timeout is not zero, a rollback is automatically performed after the given timeout.
+	// devices: A list of device paths for which a checkpoint should be created. An empty list means all devices.
+	// rollbackTimeout: The time in seconds until NetworkManager will automatically rollback to the checkpoint. Set to zero for infinite.
+	// flags: Flags for the creation.
+	// returns: On success, the new checkpoint.
+	CheckpointCreate(devices []Device, rollbackTimeout uint32, flags []NmCheckpointCreateFlags) (Checkpoint, error)
+
+	// Destroy a previously created checkpoint.
+	// checkpoint: The checkpoint to be destroyed. Set to empty to cancel all pending checkpoints.
+	CheckpointDestroy(checkpoint Checkpoint) error
+
+	// Reset the timeout for rollback for the checkpoint.
+	// Since: 1.12
+	// addTimeout: number of seconds from ~now~ in which the timeout will expire. Set to 0 to disable the timeout. Note that the added seconds start counting from now, not "Created" timestamp or the previous expiration time. Note that the "Created" property of the checkpoint will stay unchanged by this call. However, the "RollbackTimeout" will be recalculated to give the approximate new expiration time. The new "RollbackTimeout" property will be approximate up to one second precision, which is the accuracy of the property.
+	CheckpointAdjustRollbackTimeout(checkpoint Checkpoint, addTimeout uint32) error
+
+	/* PROPERTIES */
+
+	// The list of realized network devices. Realized devices are those which have backing resources (eg from the kernel or a management daemon like ModemManager, teamd, etc).
+	GetPropertyDevices() []Device
+
+	// The list of both realized and un-realized network devices. Un-realized devices are software devices which do not yet have backing resources, but for which backing resources can be created if the device is activated.
+	GetPropertyAllDevices() []Device
+
+	// The list of active checkpoints.
+	GetPropertyCheckpoints() []Checkpoint
+
+	// Indicates if overall networking is currently enabled or not. See the Enable() method.
+	GetPropertyNetworkingEnabled() bool
+
+	// Indicates if wireless is currently enabled or not.
+	GetPropertyWirelessEnabled() bool
+
+	// Indicates if the wireless hardware is currently enabled, i.e. the state of the RF kill switch.
+	GetPropertyWirelessHardwareEnabled() bool
+
+	// Indicates if mobile broadband devices are currently enabled or not.
+	GetPropertyWwanEnabled() bool
+
+	// Indicates if the mobile broadband hardware is currently enabled, i.e. the state of the RF kill switch.
+	GetPropertyWwanHardwareEnabled() bool
+
+	// Indicates if WiMAX devices are currently enabled or not.
+	GetPropertyWimaxEnabled() bool
+
+	// Indicates if the WiMAX hardware is currently enabled, i.e. the state of the RF kill switch.
+	GetPropertyWimaxHardwareEnabled() bool
+
+	// List of active connection object paths.
+	GetPropertyActiveConnections() []ActiveConnection
+
+	// The object path of the "primary" active connection being used to access the network. In particular, if there is no VPN active, or the VPN does not have the default route, then this indicates the connection that has the default route. If there is a VPN active with the default route, then this indicates the connection that contains the route to the VPN endpoint.
+	GetPropertyPrimaryConnection() Connection
+
+	// The connection type of the "primary" active connection being used to access the network. This is the same as the Type property on the object indicated by PrimaryConnection.
+	GetPropertyPrimaryConnectionType() string
+
+	// Indicates whether the connectivity is metered. This is equivalent to the metered property of the device associated with the primary connection.
+	GetPropertyMetered() NmMetered
+
+	// The object path of an active connection that is currently being activated and which is expected to become the new PrimaryConnection when it finishes activating.
+	GetPropertyActivatingConnection() ActiveConnection
+
+	// Indicates whether NM is still starting up; this becomes FALSE when NM has finished attempting to activate every connection that it might be able to activate at startup.
+	GetPropertyStartup() bool
+
+	// NetworkManager version.
+	GetPropertyVersion() string
+
+	// The current set of capabilities. See NMCapability for currently defined capability numbers. The array is guaranteed to be sorted in ascending order without duplicates.
+	GetPropertyCapabilities() []NmCapability
+
+	// The overall state of the NetworkManager daemon.
+	// This takes state of all active connections and the connectivity state into account to produce a single indicator of the network accessibility status.
+	// The graphical shells may use this property to provide network connection status indication and applications may use this to check if Internet connection is accessible. Shell that is able to cope with captive portals should use the "Connectivity" property to decide whether to present a captive portal authentication dialog.
+	GetPropertyState() NmState
+
+	// The result of the last connectivity check. The connectivity check is triggered automatically when a default connection becomes available, periodically and by calling a CheckConnectivity() method.
+	// This property is in general useful for the graphical shell to determine whether the Internet access is being hijacked by an authentication gateway (a "captive portal"). In such case it would typically present a web browser window to give the user a chance to authenticate and call CheckConnectivity() when the user submits a form or dismisses the window.
+	// To determine the whether the user is able to access the Internet without dealing with captive portals (e.g. to provide a network connection indicator or disable controls that require Internet access), the "State" property is more suitable.
+	GetPropertyConnectivity() NmConnectivity
+
+	// Indicates whether connectivity checking service has been configured. This may return true even if the service is not currently enabled.
+	// This is primarily intended for use in a privacy control panel, as a way to determine whether to show an option to enable/disable the feature.
+	GetPropertyConnectivityCheckAvailable() bool
+
+	// Indicates whether connectivity checking is enabled. This property can also be written to to disable connectivity checking (as a privacy control panel might want to do).
+	GetPropertyConnectivityCheckEnabled() bool
+
+	// Dictionary of global DNS settings where the key is one of "searches", "options" and "domains". The values for the "searches" and "options" keys are string arrays describing the list of search domains and resolver options, respectively. The value of the "domains" key is a second-level dictionary, where each key is a domain name, and each key's value is a third-level dictionary with the keys "servers" and "options". "servers" is a string array of DNS servers, "options" is a string array of domain-specific options.
+	//GetPropertyGlobalDnsConfiguration() []interface{}
 
 	Subscribe() <-chan *dbus.Signal
 	Unsubscribe()
@@ -112,15 +222,170 @@ type networkManager struct {
 	sigChan chan *dbus.Signal
 }
 
-func (n *networkManager) GetDevices() []Device {
+func (nm *networkManager) Reload(flags uint32) error {
+	return nm.call(NetworkManagerReload)
+}
+
+func (nm *networkManager) GetDevices() (devices []Device, err error) {
 	var devicePaths []dbus.ObjectPath
 
-	n.callWithReturnAndPanic(&devicePaths, NetworkManagerGetDevices)
-	devices := make([]Device, len(devicePaths))
+	nm.callWithReturnAndPanic(&devicePaths, NetworkManagerGetDevices)
+	devices = make([]Device, len(devicePaths))
 
-	var err error
 	for i, path := range devicePaths {
 		devices[i], err = DeviceFactory(path)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return
+}
+
+func (nm *networkManager) GetAllDevices() (devices []Device, err error) {
+	var devicePaths []dbus.ObjectPath
+
+	nm.callWithReturnAndPanic(&devicePaths, NetworkManagerGetAllDevices)
+	devices = make([]Device, len(devicePaths))
+
+	for i, path := range devicePaths {
+		devices[i], err = DeviceFactory(path)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return
+}
+
+func (nm *networkManager) GetDeviceByIpIface(interfaceId string) (device Device, err error) {
+	var devicePath dbus.ObjectPath
+
+	err = nm.callWithReturn(&devicePath, NetworkManagerGetDeviceByIpIface, interfaceId)
+	if err != nil {
+		return
+	}
+
+	device, err = DeviceFactory(devicePath)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (nm *networkManager) ActivateConnection(c Connection, d Device) (ac ActiveConnection, err error) {
+	var opath dbus.ObjectPath
+	nm.callWithReturnAndPanic(&opath, NetworkManagerActivateConnection, c.GetPath(), d.GetPath(), dbus.ObjectPath("/"))
+
+	ac, err = NewActiveConnection(opath)
+	if err != nil {
+		panic(err)
+	}
+
+	return
+}
+
+func (nm *networkManager) AddAndActivateConnection(connection map[string]map[string]interface{}, d Device) (ac ActiveConnection, err error) {
+	var opath1 dbus.ObjectPath
+	var opath2 dbus.ObjectPath
+
+	err = nm.callWithReturn2(&opath1, &opath2, NetworkManagerAddAndActivateConnection, connection, d.GetPath())
+	if err != nil {
+		return
+	}
+
+	ac, err = NewActiveConnection(opath2)
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (nm *networkManager) ActivateWirelessConnection(c Connection, d Device, ap AccessPoint) (ac ActiveConnection, err error) {
+	var opath dbus.ObjectPath
+	err = nm.callWithReturn(&opath, NetworkManagerActivateConnection, c.GetPath(), d.GetPath(), ap.GetPath())
+	if err != nil {
+		return nil, err
+	}
+
+	ac, err = NewActiveConnection(opath)
+	if err != nil {
+		return nil, err
+	}
+
+	return
+}
+
+func (nm *networkManager) AddAndActivateWirelessConnection(connection map[string]map[string]interface{}, d Device, ap AccessPoint) (ac ActiveConnection, err error) {
+	var opath1 dbus.ObjectPath
+	var opath2 dbus.ObjectPath
+
+	err = nm.callWithReturn2(&opath1, &opath2, NetworkManagerAddAndActivateConnection, connection, d.GetPath(), ap.GetPath())
+	if err != nil {
+		return
+	}
+
+	ac, err = NewActiveConnection(opath2)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func (nm *networkManager) DeactivateConnection(c Connection) error {
+	return nm.call(NetworkManagerDeactivateConnection, c.GetPath())
+}
+
+func (nm *networkManager) Sleep(sleepNWake bool) error {
+	return nm.call(NetworkManagerSleep, sleepNWake)
+}
+
+func (nm *networkManager) Enable(enableNDisable bool) error {
+	return nm.call(NetworkManagerEnable, enableNDisable)
+}
+
+func (nm *networkManager) CheckConnectivity() error {
+	return nm.call(NetworkManagerCheckConnectivity)
+}
+
+func (nm *networkManager) State() (state NmState, err error) {
+	err = nm.callWithReturn(&state, NetworkManagerState)
+	return
+}
+
+func (nm *networkManager) CheckpointCreate(devices []Device, rollbackTimeout uint32, flags []NmCheckpointCreateFlags) (cp Checkpoint, err error) {
+	intFlags := 0
+	for _, flag := range flags {
+		intFlags |= int(flag)
+	}
+
+	err = nm.callWithReturn(&cp, NetworkManagerCheckpointCreate, rollbackTimeout, intFlags)
+	return
+}
+
+func (nm *networkManager) CheckpointDestroy(checkpoint Checkpoint) error {
+	if checkpoint == nil {
+		return nm.call(NetworkManagerCheckpointDestroy)
+	} else {
+		return nm.call(NetworkManagerCheckpointDestroy, checkpoint.GetPath())
+	}
+}
+
+func (nm *networkManager) CheckpointAdjustRollbackTimeout(checkpoint Checkpoint, addTimeout uint32) error {
+	return nm.call(NetworkManagerCheckpointAdjustRollbackTimeout, checkpoint, addTimeout)
+}
+
+/* PROPERTIES */
+
+func (nm *networkManager) GetPropertyDevices() []Device {
+	devicesPaths := nm.getSliceObjectProperty(NetworkManagerPropertyDevices)
+	devices := make([]Device, len(devicesPaths))
+
+	var err error
+	for i, path := range devicesPaths {
+		devices[i], err = NewDevice(path)
 		if err != nil {
 			panic(err)
 		}
@@ -129,15 +394,13 @@ func (n *networkManager) GetDevices() []Device {
 	return devices
 }
 
-func (n *networkManager) GetAllDevices() []Device {
-	var devicePaths []dbus.ObjectPath
-
-	n.callWithReturnAndPanic(&devicePaths, NetworkManagerGetAllDevices)
-	devices := make([]Device, len(devicePaths))
+func (nm *networkManager) GetPropertyAllDevices() []Device {
+	devicesPaths := nm.getSliceObjectProperty(NetworkManagerPropertyAllDevices)
+	devices := make([]Device, len(devicesPaths))
 
 	var err error
-	for i, path := range devicePaths {
-		devices[i], err = DeviceFactory(path)
+	for i, path := range devicesPaths {
+		devices[i], err = NewDevice(path)
 		if err != nil {
 			panic(err)
 		}
@@ -146,12 +409,51 @@ func (n *networkManager) GetAllDevices() []Device {
 	return devices
 }
 
-func (n *networkManager) GetState() NmState {
-	return NmState(n.getUint32Property(NetworkManagerPropertyState))
+func (nm *networkManager) GetPropertyCheckpoints() []Checkpoint {
+	checkpointsPaths := nm.getSliceObjectProperty(NetworkManagerPropertyAllDevices)
+	checkpoints := make([]Checkpoint, len(checkpointsPaths))
+
+	var err error
+	for i, path := range checkpointsPaths {
+		checkpoints[i], err = NewCheckpoint(path)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	return checkpoints
 }
 
-func (n *networkManager) GetActiveConnections() []ActiveConnection {
-	acPaths := n.getSliceObjectProperty(NetworkManagerPropertyActiveConnections)
+func (nm *networkManager) GetPropertyNetworkingEnabled() bool {
+	return nm.getBoolProperty(NetworkManagerPropertyNetworkingEnabled)
+}
+
+func (nm *networkManager) GetPropertyWirelessEnabled() bool {
+	return nm.getBoolProperty(NetworkManagerPropertyWirelessEnabled)
+}
+
+func (nm *networkManager) GetPropertyWirelessHardwareEnabled() bool {
+	return nm.getBoolProperty(NetworkManagerPropertyWirelessHardwareEnabled)
+}
+
+func (nm *networkManager) GetPropertyWwanEnabled() bool {
+	return nm.getBoolProperty(NetworkManagerPropertyWwanEnabled)
+}
+
+func (nm *networkManager) GetPropertyWwanHardwareEnabled() bool {
+	return nm.getBoolProperty(NetworkManagerPropertyWwanHardwareEnabled)
+}
+
+func (nm *networkManager) GetPropertyWimaxEnabled() bool {
+	return nm.getBoolProperty(NetworkManagerPropertyWimaxEnabled)
+}
+
+func (nm *networkManager) GetPropertyWimaxHardwareEnabled() bool {
+	return nm.getBoolProperty(NetworkManagerPropertyWimaxHardwareEnabled)
+}
+
+func (nm *networkManager) GetPropertyActiveConnections() []ActiveConnection {
+	acPaths := nm.getSliceObjectProperty(NetworkManagerPropertyActiveConnections)
 	ac := make([]ActiveConnection, len(acPaths))
 
 	var err error
@@ -165,80 +467,97 @@ func (n *networkManager) GetActiveConnections() []ActiveConnection {
 	return ac
 }
 
-func (n *networkManager) ActivateConnection(c Connection, d Device) ActiveConnection {
-	var opath dbus.ObjectPath
-	n.callWithReturnAndPanic(&opath, NetworkManagerActivateConnection, c.GetPath(), d.GetPath(), dbus.ObjectPath("/"))
+func (nm *networkManager) GetPropertyPrimaryConnection() Connection {
+	connectionPath := nm.getObjectProperty(NetworkManagerPropertyPrimaryConnection)
 
-	activeConnection, err := NewActiveConnection(opath)
+	connection, err := NewConnection(connectionPath)
 	if err != nil {
 		panic(err)
 	}
 
-	return activeConnection
+	return connection
 }
 
-func (n *networkManager) AddAndActivateConnection(connection map[string]map[string]interface{}, d Device) (ac ActiveConnection, err error) {
-	var opath1 dbus.ObjectPath
-	var opath2 dbus.ObjectPath
+func (nm *networkManager) GetPropertyPrimaryConnectionType() string {
+	return nm.getStringProperty(NetworkManagerPropertyPrimaryConnectionType)
+}
 
-	err = n.callWithReturn2(&opath1, &opath2, NetworkManagerAddAndActivateConnection, connection, d.GetPath())
-	if err != nil {
-		return
+func (nm *networkManager) GetPropertyMetered() NmMetered {
+	return NmMetered(nm.getUint32Property(NetworkManagerPropertyMetered))
+}
+
+func (nm *networkManager) GetPropertyActivatingConnection() ActiveConnection {
+	panic("implement me")
+}
+
+func (nm *networkManager) GetPropertyStartup() bool {
+	return nm.getBoolProperty(NetworkManagerPropertyStartup)
+}
+
+func (nm *networkManager) GetPropertyVersion() string {
+	return nm.getStringProperty(NetworkManagerPropertyVersion)
+}
+
+func (nm *networkManager) GetPropertyCapabilities() []NmCapability {
+	panic("implement me")
+}
+
+func (nm *networkManager) GetPropertyState() NmState {
+	return NmState(nm.getUint32Property(NetworkManagerPropertyState))
+}
+
+func (nm *networkManager) GetPropertyConnectivity() NmConnectivity {
+	return NmConnectivity(nm.getUint32Property(NetworkManagerPropertyConnectivity))
+}
+
+func (nm *networkManager) GetPropertyConnectivityCheckAvailable() bool {
+	return nm.getBoolProperty(NetworkManagerPropertyConnectivityCheckAvailable)
+}
+
+func (nm *networkManager) GetPropertyConnectivityCheckEnabled() bool {
+	return nm.getBoolProperty(NetworkManagerPropertyConnectivityCheckEnabled)
+}
+
+func (nm *networkManager) Subscribe() <-chan *dbus.Signal {
+	if nm.sigChan != nil {
+		return nm.sigChan
 	}
 
-	ac, err = NewActiveConnection(opath2)
-	if err != nil {
-		return
-	}
-	return
+	nm.subscribeNamespace(NetworkManagerObjectPath)
+	nm.sigChan = make(chan *dbus.Signal, 10)
+	nm.conn.Signal(nm.sigChan)
+
+	return nm.sigChan
 }
 
-func (n *networkManager) ActivateWirelessConnection(c Connection, d Device, ap AccessPoint) ActiveConnection {
-	var opath dbus.ObjectPath
-	n.callWithReturnAndPanic(&opath, NetworkManagerActivateConnection, c.GetPath(), d.GetPath(), ap.GetPath())
-	return nil
+func (nm *networkManager) Unsubscribe() {
+	nm.conn.RemoveSignal(nm.sigChan)
+	nm.sigChan = nil
 }
 
-func (n *networkManager) AddAndActivateWirelessConnection(connection map[string]map[string]interface{}, d Device, ap AccessPoint) (ac ActiveConnection, err error) {
-	var opath1 dbus.ObjectPath
-	var opath2 dbus.ObjectPath
-
-	err = n.callWithReturn2(&opath1, &opath2, NetworkManagerAddAndActivateConnection, connection, d.GetPath(), ap.GetPath())
-	if err != nil {
-		return
-	}
-
-	ac, err = NewActiveConnection(opath2)
-	if err != nil {
-		return
-	}
-	return
-}
-
-func (n *networkManager) DeactivateConnection(c Connection) error {
-	return n.call(NetworkManagerDeactivateConnection, c.GetPath())
-}
-
-func (n *networkManager) Subscribe() <-chan *dbus.Signal {
-	if n.sigChan != nil {
-		return n.sigChan
-	}
-
-	n.subscribeNamespace(NetworkManagerObjectPath)
-	n.sigChan = make(chan *dbus.Signal, 10)
-	n.conn.Signal(n.sigChan)
-
-	return n.sigChan
-}
-
-func (n *networkManager) Unsubscribe() {
-	n.conn.RemoveSignal(n.sigChan)
-	n.sigChan = nil
-}
-
-func (n *networkManager) MarshalJSON() ([]byte, error) {
+func (nm *networkManager) MarshalJSON() ([]byte, error) {
 	return json.Marshal(map[string]interface{}{
-		"NetworkState": n.GetState().String(),
-		"Devices":      n.GetDevices(),
+		"Devices":                    nm.GetPropertyDevices(),
+		"AllDevices":                 nm.GetPropertyAllDevices(),
+		"Checkpoints":                nm.GetPropertyCheckpoints(),
+		"NetworkingEnabled":          nm.GetPropertyNetworkingEnabled(),
+		"WirelessEnabled":            nm.GetPropertyWirelessEnabled(),
+		"WirelessHardwareEnabled":    nm.GetPropertyWirelessHardwareEnabled(),
+		"WwanEnabled":                nm.GetPropertyWwanEnabled(),
+		"WwanHardwareEnabled":        nm.GetPropertyWwanHardwareEnabled(),
+		"WimaxEnabled":               nm.GetPropertyWimaxEnabled(),
+		"WimaxHardwareEnabled":       nm.GetPropertyWimaxHardwareEnabled(),
+		"ActiveConnections":          nm.GetPropertyActiveConnections(),
+		"PrimaryConnection":          nm.GetPropertyPrimaryConnection(),
+		"PrimaryConnectionType":      nm.GetPropertyPrimaryConnectionType(),
+		"Metered":                    nm.GetPropertyMetered(),
+		"ActivatingConnection":       nm.GetPropertyActivatingConnection(),
+		"Startup":                    nm.GetPropertyStartup(),
+		"Version":                    nm.GetPropertyVersion(),
+		"Capabilities":               nm.GetPropertyCapabilities(),
+		"State":                      nm.GetPropertyState(),
+		"Connectivity":               nm.GetPropertyConnectivity(),
+		"ConnectivityCheckAvailable": nm.GetPropertyConnectivityCheckAvailable(),
+		"ConnectivityCheckEnabled":   nm.GetPropertyConnectivityCheckEnabled(),
 	})
 }

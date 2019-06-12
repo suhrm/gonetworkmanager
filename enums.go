@@ -4,44 +4,73 @@ package gonetworkmanager
 type NmConnectivity uint32
 
 const (
-	NmConnectivityUnknown NmConnectivity = 0
-	NmConnectivityNone    NmConnectivity = 1
-	NmConnectivityPortal  NmConnectivity = 2
-	NmConnectivityLimited NmConnectivity = 3
-	NmConnectivityFull    NmConnectivity = 4
+	NmConnectivityUnknown NmConnectivity = 0 // Network connectivity is unknown. This means the connectivity checks are disabled (e.g. on server installations) or has not run yet. The graphical shell should assume the Internet connection might be available and not present a captive portal window.
+	NmConnectivityNone    NmConnectivity = 1 // The host is not connected to any network. There's no active connection that contains a default route to the internet and thus it makes no sense to even attempt a connectivity check. The graphical shell should use this state to indicate the network connection is unavailable.
+	NmConnectivityPortal  NmConnectivity = 2 // The Internet connection is hijacked by a captive portal gateway. The graphical shell may open a sandboxed web browser window (because the captive portals typically attempt a man-in-the-middle attacks against the https connections) for the purpose of authenticating to a gateway and retrigger the connectivity check with CheckConnectivity() when the browser window is dismissed.
+	NmConnectivityLimited NmConnectivity = 3 // The host is connected to a network, does not appear to be able to reach the full Internet, but a captive portal has not been detected.
+	NmConnectivityFull    NmConnectivity = 4 // The host is connected to a network, and appears to be able to reach the full Internet.
 )
 
 //go:generate stringer -type=NmState
 type NmState uint32
 
 const (
-	NmStateUnknown         NmState = 0
-	NmStateAsleep          NmState = 10
-	NmStateDisconnected    NmState = 20
-	NmStateDisconnecting   NmState = 30
-	NmStateConnecting      NmState = 40
-	NmStateConnectedLocal  NmState = 50
-	NmStateConnectedSite   NmState = 60
-	NmStateConnectedGlobal NmState = 70
+	NmStateUnknown         NmState = 0  // Networking state is unknown. This indicates a daemon error that makes it unable to reasonably assess the state. In such event the applications are expected to assume Internet connectivity might be present and not disable controls that require network access. The graphical shells may hide the network accessibility indicator altogether since no meaningful status indication can be provided.
+	NmStateAsleep          NmState = 10 // Networking is not enabled, the system is being suspended or resumed from suspend.
+	NmStateDisconnected    NmState = 20 // There is no active network connection. The graphical shell should indicate no network connectivity and the applications should not attempt to access the network.
+	NmStateDisconnecting   NmState = 30 // Network connections are being cleaned up. The applications should tear down their network sessions.
+	NmStateConnecting      NmState = 40 // A network connection is being started The graphical shell should indicate the network is being connected while the applications should still make no attempts to connect the network.
+	NmStateConnectedLocal  NmState = 50 // There is only local IPv4 and/or IPv6 connectivity, but no default route to access the Internet. The graphical shell should indicate no network connectivity.
+	NmStateConnectedSite   NmState = 60 // There is only site-wide IPv4 and/or IPv6 connectivity. This means a default route is available, but the Internet connectivity check (see "Connectivity" property) did not succeed. The graphical shell should indicate limited network connectivity.
+	NmStateConnectedGlobal NmState = 70 // There is global IPv4 and/or IPv6 Internet connectivity This means the Internet connectivity check succeeded, the graphical shell should indicate full network connectivity.
+)
+
+//go:generate stringer -type=NmCheckpointCreateFlags
+type NmCheckpointCreateFlags uint32
+
+const (
+	NmCheckpointCreateFlagsNone                 NmCheckpointCreateFlags = 0    // no flags
+	NmCheckpointCreateFlagsDestroyAll           NmCheckpointCreateFlags = 0x01 // when creating a new checkpoint, destroy all existing ones.
+	NmCheckpointCreateFlagsDeleteNewConnections NmCheckpointCreateFlags = 0x02 // upon rollback, delete any new connection added after the checkpoint (Since: 1.6)
+	NmCheckpointCreateFlagsDisconnectNewDevices NmCheckpointCreateFlags = 0x04 // upon rollback, disconnect any new device appeared after the checkpoint (Since: 1.6)
+	NmCheckpointCreateFlagsAllowOverlapping     NmCheckpointCreateFlags = 0x08 // by default, creating a checkpoint fails if there are already existing checkoints that reference the same devices. With this flag, creation of such checkpoints is allowed, however, if an older checkpoint that references overlapping devices gets rolled back, it will automatically destroy this checkpoint during rollback. This allows to create several overlapping checkpoints in parallel, and rollback to them at will. With the special case that rolling back to an older checkpoint will invalidate all overlapping younger checkpoints. This opts-in that the checkpoint can be automatically destroyed by the rollback of an older checkpoint. (Since: 1.12)
+)
+
+//go:generate stringer -type=NmCapability
+type NmCapability uint32
+
+const (
+	NmCapabilityTeam NmCapability = 1 // Teams can be managed
+)
+
+//go:generate stringer -type=NmMetered
+type NmMetered uint32
+
+const (
+	NmMeteredUnknown  NmMetered = 0 // The metered status is unknown
+	NmMeteredYes      NmMetered = 1 // Metered, the value was statically set
+	NmMeteredNo       NmMetered = 2 // Not metered, the value was statically set
+	NmMeteredGuessYes NmMetered = 3 // Metered, the value was guessed
+	NmMeteredGuessNo  NmMetered = 4 // Not metered, the value was guessed
 )
 
 //go:generate stringer -type=NmDeviceState
 type NmDeviceState uint32
 
 const (
-	NmDeviceStateUnknown      NmDeviceState = 0
-	NmDeviceStateUnmanaged    NmDeviceState = 10
-	NmDeviceStateUnavailable  NmDeviceState = 20
-	NmDeviceStateDisconnected NmDeviceState = 30
-	NmDeviceStatePrepare      NmDeviceState = 40
-	NmDeviceStateConfig       NmDeviceState = 50
-	NmDeviceStateNeed_auth    NmDeviceState = 60
-	NmDeviceStateIp_config    NmDeviceState = 70
-	NmDeviceStateIp_check     NmDeviceState = 80
-	NmDeviceStateSecondaries  NmDeviceState = 90
-	NmDeviceStateActivated    NmDeviceState = 100
-	NmDeviceStateDeactivating NmDeviceState = 110
-	NmDeviceStateFailed       NmDeviceState = 120
+	NmDeviceStateUnknown      NmDeviceState = 0   // the device's state is unknown
+	NmDeviceStateUnmanaged    NmDeviceState = 10  // the device is recognized, but not managed by NetworkManager
+	NmDeviceStateUnavailable  NmDeviceState = 20  // the device is managed by NetworkManager, but is not available for use. Reasons may include the wireless switched off, missing firmware, no ethernet carrier, missing supplicant or modem manager, etc.
+	NmDeviceStateDisconnected NmDeviceState = 30  // the device can be activated, but is currently idle and not connected to a network.
+	NmDeviceStatePrepare      NmDeviceState = 40  // the device is preparing the connection to the network. This may include operations like changing the MAC address, setting physical link properties, and anything else required to connect to the requested network.
+	NmDeviceStateConfig       NmDeviceState = 50  // the device is connecting to the requested network. This may include operations like associating with the Wi-Fi AP, dialing the modem, connecting to the remote Bluetooth device, etc.
+	NmDeviceStateNeed_auth    NmDeviceState = 60  // the device requires more information to continue connecting to the requested network. This includes secrets like WiFi passphrases, login passwords, PIN codes, etc.
+	NmDeviceStateIp_config    NmDeviceState = 70  // the device is requesting IPv4 and/or IPv6 addresses and routing information from the network.
+	NmDeviceStateIp_check     NmDeviceState = 80  // the device is checking whether further action is required for the requested network connection. This may include checking whether only local network access is available, whether a captive portal is blocking access to the Internet, etc.
+	NmDeviceStateSecondaries  NmDeviceState = 90  // the device is waiting for a secondary connection (like a VPN) which must activated before the device can be activated
+	NmDeviceStateActivated    NmDeviceState = 100 // the device has a network connection, either local or global.
+	NmDeviceStateDeactivating NmDeviceState = 110 // a disconnection from the current network connection was requested, and the device is cleaning up resources used for that connection. The network connection may still be valid.
+	NmDeviceStateFailed       NmDeviceState = 120 // the device failed to connect to the requested network and is cleaning up the connection request
 )
 
 //go:generate stringer -type=NmActiveConnectionState
