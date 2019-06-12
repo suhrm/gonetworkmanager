@@ -1,6 +1,9 @@
 package gonetworkmanager
 
-import "github.com/godbus/dbus"
+import (
+	"encoding/json"
+	"github.com/godbus/dbus"
+)
 
 const (
 	CheckpointInterface = NetworkManagerInterface + ".Checkpoint"
@@ -22,6 +25,8 @@ type Checkpoint interface {
 
 	// Timeout in seconds for automatic rollback, or zero.
 	GetPropertyRollbackTimeout() uint32
+
+	MarshalJSON() ([]byte, error)
 }
 
 func NewCheckpoint(objectPath dbus.ObjectPath) (Checkpoint, error) {
@@ -58,4 +63,16 @@ func (c *checkpoint) GetPropertyRollbackTimeout() uint32 {
 
 func (c *checkpoint) GetPath() dbus.ObjectPath {
 	return c.obj.Path()
+}
+
+func (c *checkpoint) marshalMap() map[string]interface{} {
+	return map[string]interface{}{
+		"Devices":         c.GetPropertyDevices(),
+		"Created":         c.GetPropertyCreated(),
+		"RollbackTimeout": c.GetPropertyRollbackTimeout(),
+	}
+}
+
+func (c *checkpoint) MarshalJSON() ([]byte, error) {
+	return json.Marshal(c.marshalMap())
 }
