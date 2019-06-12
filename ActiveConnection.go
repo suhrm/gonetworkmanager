@@ -27,7 +27,9 @@ const (
 )
 
 type ActiveConnection interface {
-	// GetConnection gets connection object of the connection.
+	GetPath() dbus.ObjectPath
+
+	// GetConnectionSettings gets connection object of the connection.
 	GetConnection() Connection
 
 	// GetSpecificObject gets a specific object associated with the active connection.
@@ -83,6 +85,10 @@ func NewActiveConnection(objectPath dbus.ObjectPath) (ActiveConnection, error) {
 
 type activeConnection struct {
 	dbusBase
+}
+
+func (a *activeConnection) GetPath() dbus.ObjectPath {
+	return a.obj.Path()
 }
 
 func (a *activeConnection) GetConnection() Connection {
