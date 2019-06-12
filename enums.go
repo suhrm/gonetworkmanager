@@ -64,9 +64,9 @@ const (
 	NmDeviceStateDisconnected NmDeviceState = 30  // the device can be activated, but is currently idle and not connected to a network.
 	NmDeviceStatePrepare      NmDeviceState = 40  // the device is preparing the connection to the network. This may include operations like changing the MAC address, setting physical link properties, and anything else required to connect to the requested network.
 	NmDeviceStateConfig       NmDeviceState = 50  // the device is connecting to the requested network. This may include operations like associating with the Wi-Fi AP, dialing the modem, connecting to the remote Bluetooth device, etc.
-	NmDeviceStateNeed_auth    NmDeviceState = 60  // the device requires more information to continue connecting to the requested network. This includes secrets like WiFi passphrases, login passwords, PIN codes, etc.
-	NmDeviceStateIp_config    NmDeviceState = 70  // the device is requesting IPv4 and/or IPv6 addresses and routing information from the network.
-	NmDeviceStateIp_check     NmDeviceState = 80  // the device is checking whether further action is required for the requested network connection. This may include checking whether only local network access is available, whether a captive portal is blocking access to the Internet, etc.
+	NmDeviceStateNeedAuth     NmDeviceState = 60  // the device requires more information to continue connecting to the requested network. This includes secrets like WiFi passphrases, login passwords, PIN codes, etc.
+	NmDeviceStateIpConfig     NmDeviceState = 70  // the device is requesting IPv4 and/or IPv6 addresses and routing information from the network.
+	NmDeviceStateIpCheck      NmDeviceState = 80  // the device is checking whether further action is required for the requested network connection. This may include checking whether only local network access is available, whether a captive portal is blocking access to the Internet, etc.
 	NmDeviceStateSecondaries  NmDeviceState = 90  // the device is waiting for a secondary connection (like a VPN) which must activated before the device can be activated
 	NmDeviceStateActivated    NmDeviceState = 100 // the device has a network connection, either local or global.
 	NmDeviceStateDeactivating NmDeviceState = 110 // a disconnection from the current network connection was requested, and the device is cleaning up resources used for that connection. The network connection may still be valid.
