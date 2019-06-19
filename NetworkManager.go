@@ -229,14 +229,17 @@ func (nm *networkManager) Reload(flags uint32) error {
 
 func (nm *networkManager) GetDevices() (devices []Device, err error) {
 	var devicePaths []dbus.ObjectPath
+	err = nm.callWithReturn(&devicePaths, NetworkManagerGetDevices)
+	if err != nil {
+		return
+	}
 
-	nm.callWithReturnAndPanic(&devicePaths, NetworkManagerGetDevices)
 	devices = make([]Device, len(devicePaths))
 
 	for i, path := range devicePaths {
 		devices[i], err = DeviceFactory(path)
 		if err != nil {
-			panic(err)
+			return
 		}
 	}
 
@@ -246,13 +249,17 @@ func (nm *networkManager) GetDevices() (devices []Device, err error) {
 func (nm *networkManager) GetAllDevices() (devices []Device, err error) {
 	var devicePaths []dbus.ObjectPath
 
-	nm.callWithReturnAndPanic(&devicePaths, NetworkManagerGetAllDevices)
+	err = nm.callWithReturn(&devicePaths, NetworkManagerGetAllDevices)
+	if err != nil {
+		return
+	}
+
 	devices = make([]Device, len(devicePaths))
 
 	for i, path := range devicePaths {
 		devices[i], err = DeviceFactory(path)
 		if err != nil {
-			panic(err)
+			return
 		}
 	}
 
@@ -277,11 +284,14 @@ func (nm *networkManager) GetDeviceByIpIface(interfaceId string) (device Device,
 
 func (nm *networkManager) ActivateConnection(c Connection, d Device) (ac ActiveConnection, err error) {
 	var opath dbus.ObjectPath
-	nm.callWithReturnAndPanic(&opath, NetworkManagerActivateConnection, c.GetPath(), d.GetPath(), dbus.ObjectPath("/"))
+	err = nm.callWithReturn(&opath, NetworkManagerActivateConnection, c.GetPath(), d.GetPath(), dbus.ObjectPath("/"))
+	if err != nil {
+		return
+	}
 
 	ac, err = NewActiveConnection(opath)
 	if err != nil {
-		panic(err)
+		return
 	}
 
 	return

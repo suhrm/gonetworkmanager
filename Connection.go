@@ -43,8 +43,8 @@ type Connection interface {
 	// GetSettings gets the settings maps describing this network configuration.
 	// This will never include any secrets required for connection to the
 	// network, as those are often protected. Secrets must be requested
-	// separately using the GetSecrets() callWithReturnAndPanic.
-	GetSettings() ConnectionSettings
+	// separately using the GetSecrets() method.
+	GetSettings() (ConnectionSettings, error)
 
 	// Clear the secrets belonging to this network connection profile.
 	ClearSecrets() error
@@ -89,9 +89,13 @@ func (c *connection) Delete() error {
 	return c.call(ConnectionDelete)
 }
 
-func (c *connection) GetSettings() ConnectionSettings {
+func (c *connection) GetSettings() (ConnectionSettings, error) {
 	var settings map[string]map[string]dbus.Variant
-	c.callWithReturnAndPanic(&settings, ConnectionGetSettings)
+	err := c.callWithReturn(&settings, ConnectionGetSettings)
+
+	if err != nil {
+		return nil, err
+	}
 
 	rv := make(ConnectionSettings)
 
@@ -103,7 +107,7 @@ func (c *connection) GetSettings() ConnectionSettings {
 		}
 	}
 
-	return rv
+	return rv, nil
 }
 
 func (c *connection) ClearSecrets() error {
@@ -127,5 +131,6 @@ func (c *connection) GetPropertyFilename() (string, error) {
 }
 
 func (c *connection) MarshalJSON() ([]byte, error) {
-	return json.Marshal(c.GetSettings())
+	s, _ := c.GetSettings()
+	return json.Marshal(s)
 }

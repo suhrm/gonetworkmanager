@@ -34,13 +34,6 @@ func (d *dbusBase) call(method string, args ...interface{}) error {
 	return d.obj.Call(method, 0, args...).Err
 }
 
-func (d *dbusBase) callWithReturnAndPanic(ret interface{}, method string, args ...interface{}) {
-	err := d.callWithReturn(ret, method, args...)
-	if err != nil {
-		panic(err)
-	}
-}
-
 func (d *dbusBase) callWithReturn(ret interface{}, method string, args ...interface{}) error {
 	return d.obj.Call(method, 0, args...).Store(ret)
 }
