@@ -37,10 +37,10 @@ type Settings interface {
 	SaveHostname(hostname string)
 
 	// If true, adding and modifying connections is supported.
-	CanModify() bool
+	GetPropertyCanModify() (bool, error)
 
 	// The machine hostname stored in persistent configuration.
-	Hostname() string
+	GetPropertyHostname() (string, error)
 }
 
 func NewSettings() (Settings, error) {
@@ -96,12 +96,10 @@ func (s *settings) SaveHostname(hostname string) {
 	}
 }
 
-func (s *settings) Hostname() string {
-	hostname := s.getStringProperty(SettingsPropertyHostname)
-
-	return hostname
+func (s *settings) GetPropertyHostname() (string, error) {
+	return s.getStringProperty(SettingsPropertyHostname)
 }
 
-func (s *settings) CanModify() bool {
+func (s *settings) GetPropertyCanModify() (bool, error) {
 	return s.getBoolProperty(SettingsPropertyCanModify)
 }

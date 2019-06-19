@@ -2,6 +2,8 @@ package gonetworkmanager
 
 import (
 	"encoding/json"
+	"errors"
+
 	"github.com/godbus/dbus"
 )
 
@@ -52,28 +54,28 @@ type IP6RouteData struct {
 type IP6Config interface {
 
 	// Array of IP address data objects. All addresses will include "address" (an IP address string), and "prefix" (a uint). Some addresses may include additional attributes.
-	GetAddressData() []IP6AddressData
+	GetPropertyAddressData() ([]IP6AddressData, error)
 
 	// The gateway in use.
-	GetGateway() string
+	GetPropertyGateway() (string, error)
 
 	// Array of IP route data objects. All routes will include "dest" (an IP address string) and "prefix" (a uint). Some routes may include "next-hop" (an IP address string), "metric" (a uint), and additional attributes.
-	GetRouteData() []IP6RouteData
+	GetPropertyRouteData() ([]IP6RouteData, error)
 
 	// GetNameservers gets the nameservers in use.
-	GetNameservers() []string
+	GetPropertyNameservers() ([]string, error)
 
 	// A list of domains this address belongs to.
-	GetDomains() []string
+	GetPropertyDomains() ([]string, error)
 
 	// A list of dns searches.
-	GetSearches() []string
+	GetPropertySearches() ([]string, error)
 
 	// A list of DNS options that modify the behavior of the DNS resolver. See resolv.conf(5) manual page for the list of supported options.
-	GetDnsOptions() []string
+	GetPropertyDnsOptions() ([]string, error)
 
 	// The relative priority of DNS servers.
-	GetDnsPriority() uint32
+	GetPropertyDnsPriority() (uint32, error)
 
 	MarshalJSON() ([]byte, error)
 }
@@ -87,29 +89,45 @@ type ip6Config struct {
 	dbusBase
 }
 
-func (c *ip6Config) GetAddressData() []IP6AddressData {
-
-	addresses := c.getSliceMapStringVariantProperty(IP6ConfigPropertyAddressData)
+func (c *ip6Config) GetPropertyAddressData() ([]IP6AddressData, error) {
+	addresses, err := c.getSliceMapStringVariantProperty(IP6ConfigPropertyAddressData)
 	ret := make([]IP6AddressData, len(addresses))
 
+	if err != nil {
+		return ret, err
+	}
+
 	for i, address := range addresses {
-		prefix := address["prefix"].Value().(uint32)
+		prefix, ok := address["prefix"].Value().(uint32)
+		if !ok {
+			return ret, errors.New("unexpected variant type for prefix")
+		}
+
+		address, ok := address["address"].Value().(string)
+		if !ok {
+			return ret, errors.New("unexpected variant type for address")
+		}
 
 		ret[i] = IP6AddressData{
-			Address: address["address"].Value().(string),
+			Address: address,
 			Prefix:  uint8(prefix),
 		}
 	}
-	return ret
+
+	return ret, nil
 }
 
-func (c *ip6Config) GetGateway() string {
+func (c *ip6Config) GetPropertyGateway() (string, error) {
 	return c.getStringProperty(IP6ConfigPropertyGateway)
 }
 
-func (c *ip6Config) GetRouteData() []IP6RouteData {
-	routesData := c.getSliceMapStringVariantProperty(IP6ConfigPropertyRouteData)
+func (c *ip6Config) GetPropertyRouteData() ([]IP6RouteData, error) {
+	routesData, err := c.getSliceMapStringVariantProperty(IP6ConfigPropertyRouteData)
 	routes := make([]IP6RouteData, len(routesData))
+
+	if err != nil {
+		return routes, err
+	}
 
 	for _, routeData := range routesData {
 
@@ -118,14 +136,28 @@ func (c *ip6Config) GetRouteData() []IP6RouteData {
 		for routeDataAttributeName, routeDataAttribute := range routeData {
 			switch routeDataAttributeName {
 			case "dest":
-				route.Destination = routeDataAttribute.Value().(string)
+				destination, ok := routeDataAttribute.Value().(string)
+				if !ok {
+					return routes, errors.New("unexpected variant type for dest")
+				}
+				route.Destination = destination
 			case "prefix":
-				prefix, _ := routeDataAttribute.Value().(uint32)
+				prefix, ok := routeDataAttribute.Value().(uint32)
+				if !ok {
+					return routes, errors.New("unexpected variant type for prefix")
+				}
 				route.Prefix = uint8(prefix)
 			case "next-hop":
-				route.NextHop = routeDataAttribute.Value().(string)
+				nextHop, ok := routeDataAttribute.Value().(string)
+				if !ok {
+					return routes, errors.New("unexpected variant type for next-hop")
+				}
+				route.NextHop = nextHop
 			case "metric":
-				metric := routeDataAttribute.Value().(uint32)
+				metric, ok := routeDataAttribute.Value().(uint32)
+				if !ok {
+					return routes, errors.New("unexpected variant type for metric")
+				}
 				route.Metric = uint8(metric)
 			default:
 				route.AdditionalAttributes[routeDataAttributeName] = routeDataAttribute.String()
@@ -134,41 +166,47 @@ func (c *ip6Config) GetRouteData() []IP6RouteData {
 
 		routes = append(routes, route)
 	}
-	return routes
+	return routes, nil
 }
 
-func (c *ip6Config) GetNameservers() []string {
-	nameservers := c.getSliceSliceByteProperty(IP6ConfigPropertyNameservers)
+func (c *ip6Config) GetPropertyNameservers() ([]string, error) {
+	nameservers, err := c.getSliceSliceByteProperty(IP6ConfigPropertyNameservers)
 	ret := make([]string, len(nameservers))
+
+	if err != nil {
+		return ret, err
+	}
 
 	for i, nameserver := range nameservers {
 		ret[i] = string(nameserver)
 	}
 
-	return ret
+	return ret, nil
 }
 
-func (c *ip6Config) GetDomains() []string {
+func (c *ip6Config) GetPropertyDomains() ([]string, error) {
 	return c.getSliceStringProperty(IP6ConfigPropertyDomains)
 }
 
-func (c *ip6Config) GetSearches() []string {
+func (c *ip6Config) GetPropertySearches() ([]string, error) {
 	return c.getSliceStringProperty(IP6ConfigPropertySearches)
 }
 
-func (c *ip6Config) GetDnsOptions() []string {
+func (c *ip6Config) GetPropertyDnsOptions() ([]string, error) {
 	return c.getSliceStringProperty(IP6ConfigPropertyDnsOptions)
 }
 
-func (c *ip6Config) GetDnsPriority() uint32 {
+func (c *ip6Config) GetPropertyDnsPriority() (uint32, error) {
 	return c.getUint32Property(IP6ConfigPropertyDnsPriority)
 }
 
 func (c *ip6Config) MarshalJSON() ([]byte, error) {
-	return json.Marshal(map[string]interface{}{
-		"Addresses":   c.GetAddressData(),
-		"Routes":      c.GetRouteData(),
-		"Nameservers": c.GetNameservers(),
-		"Domains":     c.GetDomains(),
-	})
+	m := make(map[string]interface{})
+
+	m["Addresses"], _ = c.GetPropertyAddressData()
+	m["Routes"], _ = c.GetPropertyRouteData()
+	m["Nameservers"], _ = c.GetPropertyNameservers()
+	m["Domains"], _ = c.GetPropertyDomains()
+
+	return json.Marshal(m)
 }

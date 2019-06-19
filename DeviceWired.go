@@ -9,6 +9,7 @@ import (
 const (
 	DeviceWiredInterface = DeviceInterface + ".Wired"
 
+	// Properties
 	DeviceWiredPropertyHwAddress       = DeviceWiredInterface + ".HwAddress"       // readable   s
 	DeviceWiredPropertyPermHwAddress   = DeviceWiredInterface + ".PermHwAddress"   // readable   s
 	DeviceWiredPropertySpeed           = DeviceWiredInterface + ".Speed"           // readable   u
@@ -20,19 +21,19 @@ type DeviceWired interface {
 	Device
 
 	// Active hardware address of the device.
-	GetHwAddress() string
+	GetPropertyHwAddress() (string, error)
 
 	// Permanent hardware address of the device.
-	GetPermHwAddress() string
+	GetPropertyPermHwAddress() (string, error)
 
 	// Design speed of the device, in megabits/second (Mb/s).
-	GetSpeed() uint32
+	GetPropertySpeed() (uint32, error)
 
 	// Array of S/390 subchannels for S/390 or z/Architecture devices.
-	GetS390Subchannels() []string
+	GetPropertyS390Subchannels() ([]string, error)
 
 	// Indicates whether the physical carrier is found (e.g. whether a cable is plugged in or not).
-	GetCarrier() bool
+	GetPropertyCarrier() (bool, error)
 }
 
 func NewDeviceWired(objectPath dbus.ObjectPath) (DeviceWired, error) {
@@ -44,32 +45,32 @@ type deviceWired struct {
 	device
 }
 
-func (d *deviceWired) GetHwAddress() string {
+func (d *deviceWired) GetPropertyHwAddress() (string, error) {
 	return d.getStringProperty(DeviceWiredPropertyHwAddress)
 }
 
-func (d *deviceWired) GetPermHwAddress() string {
+func (d *deviceWired) GetPropertyPermHwAddress() (string, error) {
 	return d.getStringProperty(DeviceWiredPropertyPermHwAddress)
 }
 
-func (d *deviceWired) GetSpeed() uint32 {
+func (d *deviceWired) GetPropertySpeed() (uint32, error) {
 	return d.getUint32Property(DeviceWiredPropertySpeed)
 }
 
-func (d *deviceWired) GetS390Subchannels() []string {
+func (d *deviceWired) GetPropertyS390Subchannels() ([]string, error) {
 	return d.getSliceStringProperty(DeviceWiredPropertyS390Subchannels)
 }
 
-func (d *deviceWired) GetCarrier() bool {
+func (d *deviceWired) GetPropertyCarrier() (bool, error) {
 	return d.getBoolProperty(DeviceWiredPropertyCarrier)
 }
 
 func (d *deviceWired) MarshalJSON() ([]byte, error) {
 	m := d.device.marshalMap()
-	m["HwAddress"] = d.GetHwAddress()
-	m["PermHwAddress"] = d.GetPermHwAddress()
-	m["Speed"] = d.GetSpeed()
-	m["S390Subchannels"] = d.GetS390Subchannels()
-	m["Carrier"] = d.GetCarrier()
+	m["HwAddress"], _ = d.GetPropertyHwAddress()
+	m["PermHwAddress"], _ = d.GetPropertyPermHwAddress()
+	m["Speed"], _ = d.GetPropertySpeed()
+	m["S390Subchannels"], _ = d.GetPropertyS390Subchannels()
+	m["Carrier"], _ = d.GetPropertyCarrier()
 	return json.Marshal(m)
 }

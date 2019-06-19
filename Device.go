@@ -50,7 +50,12 @@ func DeviceFactory(objectPath dbus.ObjectPath) (Device, error) {
 		return nil, err
 	}
 
-	switch d.GetDeviceType() {
+	deviceType, err := d.GetPropertyDeviceType()
+	if err != nil {
+		return nil, err
+	}
+
+	switch deviceType {
 	case NmDeviceTypeDummy:
 		return NewDeviceDummy(objectPath)
 	case NmDeviceTypeGeneric:
@@ -76,64 +81,64 @@ type Device interface {
 	Delete() error
 
 	// Operating-system specific transient device hardware identifier. This is an opaque string representing the underlying hardware for the device, and shouldn't be used to keep track of individual devices. For some device types (Bluetooth, Modems) it is an identifier used by the hardware service (ie bluez or ModemManager) to refer to that device, and client programs use it get additional information from those services which NM does not provide. The Udi is not guaranteed to be consistent across reboots or hotplugs of the hardware. If you're looking for a way to uniquely track each device in your application, use the object path. If you're looking for a way to track a specific piece of hardware across reboot or hotplug, use a MAC address or USB serial number.
-	GetUdi() string
+	GetPropertyUdi() (string, error)
 
 	// The name of the device's control (and often data) interface. Note that non UTF-8 characters are backslash escaped, so the resulting name may be longer then 15 characters. Use g_strcompress() to revert the escaping.
-	GetInterface() string
+	GetPropertyInterface() (string, error)
 
 	// The name of the device's data interface when available. This property may not refer to the actual data interface until the device has successfully established a data connection, indicated by the device's State becoming ACTIVATED. Note that non UTF-8 characters are backslash escaped, so the resulting name may be longer then 15 characters. Use g_strcompress() to revert the escaping.
-	GetIpInterface() string
+	GetPropertyIpInterface() (string, error)
 
 	// The driver handling the device. Non-UTF-8 sequences are backslash escaped. Use g_strcompress() to revert.
-	GetDriver() string
+	GetPropertyDriver() (string, error)
 
 	// The version of the driver handling the device. Non-UTF-8 sequences are backslash escaped. Use g_strcompress() to revert.
-	GetDriverVersion() string
+	GetPropertyDriverVersion() (string, error)
 
 	// The firmware version for the device. Non-UTF-8 sequences are backslash escaped. Use g_strcompress() to revert.
-	GetFirmwareVersion() string
+	GetPropertyFirmwareVersion() (string, error)
 
 	// The current state of the device.
-	GetState() NmDeviceState
+	GetPropertyState() (NmDeviceState, error)
 
 	// Object path of the Ip4Config object describing the configuration of the device. Only valid when the device is in the NM_DEVICE_STATE_ACTIVATED state.
-	GetIP4Config() IP4Config
+	GetPropertyIP4Config() (IP4Config, error)
 
 	// Object path of the Dhcp4Config object describing the DHCP options returned by the DHCP server. Only valid when the device is in the NM_DEVICE_STATE_ACTIVATED state.
-	GetDHCP4Config() DHCP4Config
+	GetPropertyDHCP4Config() (DHCP4Config, error)
 
 	// Object path of the Ip6Config object describing the configuration of the device. Only valid when the device is in the NM_DEVICE_STATE_ACTIVATED state.
-	GetIP6Config() IP6Config
+	GetPropertyIP6Config() (IP6Config, error)
 
 	// Object path of the Dhcp6Config object describing the DHCP options returned by the DHCP server. Only valid when the device is in the NM_DEVICE_STATE_ACTIVATED state.
-	GetDHCP6Config() DHCP6Config
+	GetPropertyDHCP6Config() (DHCP6Config, error)
 
 	// Whether or not this device is managed by NetworkManager. Setting this property has a similar effect to configuring the device as unmanaged via the keyfile.unmanaged-devices setting in NetworkManager.conf. Changes to this value are not persistent and lost after NetworkManager restart.
-	GetManaged() bool
+	GetPropertyManaged() (bool, error)
 
 	// If TRUE, indicates the device is allowed to autoconnect. If FALSE, manual intervention is required before the device will automatically connect to a known network, such as activating a connection using the device, or setting this property to TRUE. This property cannot be set to TRUE for default-unmanaged devices, since they never autoconnect.
-	GetAutoConnect() bool
+	GetPropertyAutoConnect() (bool, error)
 
 	// If TRUE, indicates the device is likely missing firmware necessary for its operation.
-	GetFirmwareMissing() bool
+	GetPropertyFirmwareMissing() (bool, error)
 
 	// If TRUE, indicates the NetworkManager plugin for the device is likely missing or misconfigured.
-	GetNmPluginMissing() bool
+	GetPropertyNmPluginMissing() (bool, error)
 
 	// The general type of the network device; ie Ethernet, Wi-Fi, etc.
-	GetDeviceType() NmDeviceType
+	GetPropertyDeviceType() (NmDeviceType, error)
 
 	// An array of object paths of every configured connection that is currently 'available' through this device.
-	GetAvailableConnections() []Connection
+	GetPropertyAvailableConnections() ([]Connection, error)
 
 	// If non-empty, an (opaque) indicator of the physical network port associated with the device. This can be used to recognize when two seemingly-separate hardware devices are actually just different virtual interfaces to the same physical port.
-	GetPhysicalPortId() string
+	GetPropertyPhysicalPortId() (string, error)
 
 	// The device MTU (maximum transmission unit).
-	GetMtu() uint32
+	GetPropertyMtu() (uint32, error)
 
 	// True if the device exists, or False for placeholder devices that do not yet exist but could be automatically created by NetworkManager if one of their AvailableConnections was activated.
-	GetReal() bool
+	GetPropertyReal() (bool, error)
 
 	MarshalJSON() ([]byte, error)
 }
@@ -159,147 +164,137 @@ func (d *device) Delete() error {
 	return d.call(DeviceDelete)
 }
 
-func (d *device) GetUdi() string {
+func (d *device) GetPropertyUdi() (string, error) {
 	return d.getStringProperty(DevicePropertyUdi)
 }
 
-func (d *device) GetInterface() string {
+func (d *device) GetPropertyInterface() (string, error) {
 	return d.getStringProperty(DevicePropertyInterface)
 }
 
-func (d *device) GetIpInterface() string {
+func (d *device) GetPropertyIpInterface() (string, error) {
 	return d.getStringProperty(DevicePropertyIpInterface)
 }
 
-func (d *device) GetDriver() string {
+func (d *device) GetPropertyDriver() (string, error) {
 	return d.getStringProperty(DevicePropertyDriver)
 }
 
-func (d *device) GetDriverVersion() string {
+func (d *device) GetPropertyDriverVersion() (string, error) {
 	return d.getStringProperty(DevicePropertyDriverVersion)
 }
 
-func (d *device) GetFirmwareVersion() string {
+func (d *device) GetPropertyFirmwareVersion() (string, error) {
 	return d.getStringProperty(DevicePropertyFirmwareVersion)
 }
 
-func (d *device) GetState() NmDeviceState {
-	return NmDeviceState(d.getUint32Property(DevicePropertyState))
+func (d *device) GetPropertyState() (NmDeviceState, error) {
+	v, err := d.getUint32Property(DevicePropertyState)
+	return NmDeviceState(v), err
 }
 
-func (d *device) GetIP4Config() IP4Config {
-	path := d.getObjectProperty(DevicePropertyIp4Config)
-	if path == "/" {
-		return nil
+func (d *device) GetPropertyIP4Config() (IP4Config, error) {
+	path, err := d.getObjectProperty(DevicePropertyIp4Config)
+	if err != nil || path == "/" {
+		return nil, err
 	}
 
-	cfg, err := NewIP4Config(path)
-	if err != nil {
-		panic(err)
-	}
-
-	return cfg
+	return NewIP4Config(path)
 }
 
-func (d *device) GetDHCP4Config() DHCP4Config {
-	path := d.getObjectProperty(DevicePropertyDhcp4Config)
-	if path == "/" {
-		return nil
+func (d *device) GetPropertyDHCP4Config() (DHCP4Config, error) {
+	path, err := d.getObjectProperty(DevicePropertyDhcp4Config)
+	if err != nil || path == "/" {
+		return nil, err
 	}
 
-	cfg, err := NewDHCP4Config(path)
-	if err != nil {
-		panic(err)
-	}
-
-	return cfg
+	return NewDHCP4Config(path)
 }
 
-func (d *device) GetIP6Config() IP6Config {
-	path := d.getObjectProperty(DevicePropertyIp6Config)
-	if path == "/" {
-		return nil
+func (d *device) GetPropertyIP6Config() (IP6Config, error) {
+	path, err := d.getObjectProperty(DevicePropertyIp6Config)
+	if err != nil || path == "/" {
+		return nil, err
 	}
 
-	cfg, err := NewIP6Config(path)
-	if err != nil {
-		panic(err)
-	}
-
-	return cfg
+	return NewIP6Config(path)
 }
 
-func (d *device) GetDHCP6Config() DHCP6Config {
-	path := d.getObjectProperty(DevicePropertyDhcp6Config)
-	if path == "/" {
-		return nil
+func (d *device) GetPropertyDHCP6Config() (DHCP6Config, error) {
+	path, err := d.getObjectProperty(DevicePropertyDhcp6Config)
+	if err != nil || path == "/" {
+		return nil, err
 	}
 
-	cfg, err := NewDHCP6Config(path)
-	if err != nil {
-		panic(err)
-	}
-
-	return cfg
+	return NewDHCP6Config(path)
 }
 
-func (d *device) GetManaged() bool {
+func (d *device) GetPropertyManaged() (bool, error) {
 	return d.getBoolProperty(DevicePropertyManaged)
 }
 
-func (d *device) GetAutoConnect() bool {
+func (d *device) GetPropertyAutoConnect() (bool, error) {
 	return d.getBoolProperty(DevicePropertyAutoconnect)
 }
 
-func (d *device) GetFirmwareMissing() bool {
+func (d *device) GetPropertyFirmwareMissing() (bool, error) {
 	return d.getBoolProperty(DevicePropertyFirmwareMissing)
 }
 
-func (d *device) GetNmPluginMissing() bool {
+func (d *device) GetPropertyNmPluginMissing() (bool, error) {
 	return d.getBoolProperty(DevicePropertyNmPluginMissing)
 }
 
-func (d *device) GetDeviceType() NmDeviceType {
-	return NmDeviceType(d.getUint32Property(DevicePropertyDeviceType))
+func (d *device) GetPropertyDeviceType() (NmDeviceType, error) {
+	v, err := d.getUint32Property(DevicePropertyDeviceType)
+	return NmDeviceType(v), err
 }
 
-func (d *device) GetAvailableConnections() []Connection {
-	connPaths := d.getSliceObjectProperty(DevicePropertyAvailableConnections)
-	conns := make([]Connection, len(connPaths))
+func (d *device) GetPropertyAvailableConnections() ([]Connection, error) {
+	connPaths, err := d.getSliceObjectProperty(DevicePropertyAvailableConnections)
+	if err != nil {
+		return nil, err
+	}
 
-	var err error
+	conns := make([]Connection, len(connPaths))
 	for i, path := range connPaths {
 		conns[i], err = NewConnection(path)
 		if err != nil {
-			panic(err)
+			return conns, err
 		}
 	}
 
-	return conns
+	return conns, nil
 }
 
-func (d *device) GetPhysicalPortId() string {
+func (d *device) GetPropertyPhysicalPortId() (string, error) {
 	return d.getStringProperty(DevicePropertyPhysicalPortId)
 }
 
-func (d *device) GetMtu() uint32 {
+func (d *device) GetPropertyMtu() (uint32, error) {
 	return d.getUint32Property(DevicePropertyMtu)
 }
 
-func (d *device) GetReal() bool {
+func (d *device) GetPropertyReal() (bool, error) {
 	return d.getBoolProperty(DevicePropertyReal)
 }
 
 func (d *device) marshalMap() map[string]interface{} {
-	return map[string]interface{}{
-		"Interface":            d.GetInterface(),
-		"IP interface":         d.GetIpInterface(),
-		"State":                d.GetState().String(),
-		"IP4Config":            d.GetIP4Config(),
-		"DHCP4Config":          d.GetDHCP4Config(),
-		"DeviceType":           d.GetDeviceType().String(),
-		"AvailableConnections": d.GetAvailableConnections(),
-	}
+	m := make(map[string]interface{})
+
+	m["Interface"], _ = d.GetPropertyInterface()
+	m["IPInterface"], _ = d.GetPropertyIpInterface()
+	m["IP4Config"], _ = d.GetPropertyIP4Config()
+	m["DHCP4Config"], _ = d.GetPropertyDHCP4Config()
+	m["AvailableConnections"], _ = d.GetPropertyAvailableConnections()
+
+	state, _ := d.GetPropertyState()
+	m["State"] = state.String()
+
+	deviceType, _ := d.GetPropertyDeviceType()
+	m["DeviceType"] = deviceType.String()
+
+	return m
 }
 
 func (d *device) MarshalJSON() ([]byte, error) {

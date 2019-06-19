@@ -53,13 +53,13 @@ type Connection interface {
 	Save() error
 
 	// If set, indicates that the in-memory state of the connection does not match the on-disk state. This flag will be set when UpdateUnsaved() is called or when any connection details change, and cleared when the connection is saved to disk via Save() or from internal operations.
-	GetUnsaved() bool
+	GetPropertyUnsaved() (bool, error)
 
 	// Additional flags of the connection profile.
-	GetFlags() uint32
+	GetPropertyFlags() (uint32, error)
 
 	// File that stores the connection in case the connection is file-backed.
-	GetFilename() string
+	GetPropertyFilename() (string, error)
 
 	MarshalJSON() ([]byte, error)
 }
@@ -114,15 +114,15 @@ func (c *connection) Save() error {
 	return c.call(ConnectionSave)
 }
 
-func (c *connection) GetUnsaved() bool {
+func (c *connection) GetPropertyUnsaved() (bool, error) {
 	return c.getBoolProperty(ConnectionPropertyUnsaved)
 }
 
-func (c *connection) GetFlags() uint32 {
+func (c *connection) GetPropertyFlags() (uint32, error) {
 	return c.getUint32Property(ConnectionPropertyFlags)
 }
 
-func (c *connection) GetFilename() string {
+func (c *connection) GetPropertyFilename() (string, error) {
 	return c.getStringProperty(ConnectionPropertyFilename)
 }
 

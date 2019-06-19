@@ -9,6 +9,7 @@ import (
 const (
 	DeviceWirelessInterface = DeviceInterface + ".Wireless"
 
+	// Methods
 	DeviceWirelessGetAccessPoints = DeviceWirelessInterface + ".GetAccessPoints"
 	DeviceWirelessRequestScan     = DeviceWirelessInterface + ".RequestScan"
 )

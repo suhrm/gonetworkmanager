@@ -9,6 +9,7 @@ import (
 const (
 	DHCP6ConfigInterface = NetworkManagerInterface + ".DHCP6Config"
 
+	// Properties
 	DHCP6ConfigPropertyOptions = DHCP6ConfigInterface + ".Options"
 )
 
@@ -16,7 +17,7 @@ type DHCP6Options map[string]interface{}
 
 type DHCP6Config interface {
 	// GetOptions gets options map of configuration returned by the IPv4 DHCP server.
-	GetOptions() DHCP6Options
+	GetPropertyOptions() (DHCP6Options, error)
 
 	MarshalJSON() ([]byte, error)
 }
@@ -30,19 +31,24 @@ type dhcp6Config struct {
 	dbusBase
 }
 
-func (c *dhcp6Config) GetOptions() DHCP6Options {
-	options := c.getMapStringVariantProperty(DHCP6ConfigPropertyOptions)
+func (c *dhcp6Config) GetPropertyOptions() (DHCP6Options, error) {
+	options, err := c.getMapStringVariantProperty(DHCP6ConfigPropertyOptions)
 	rv := make(DHCP6Options)
+
+	if err != nil {
+		return rv, err
+	}
 
 	for k, v := range options {
 		rv[k] = v.Value()
 	}
 
-	return rv
+	return rv, nil
 }
 
 func (c *dhcp6Config) MarshalJSON() ([]byte, error) {
-	return json.Marshal(map[string]interface{}{
-		"Options": c.GetOptions(),
-	})
+	m := make(map[string]interface{})
+	m["Options"], _ = c.GetPropertyOptions()
+
+	return json.Marshal(m)
 }

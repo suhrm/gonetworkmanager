@@ -2,6 +2,8 @@ package gonetworkmanager
 
 import (
 	"encoding/json"
+	"errors"
+
 	"github.com/godbus/dbus"
 )
 
@@ -59,42 +61,42 @@ type IP4NameserverData struct {
 type IP4Config interface {
 	// Array of arrays of IPv4 address/prefix/gateway. All 3 elements of each array are in network byte order. Essentially: [(addr, prefix, gateway), (addr, prefix, gateway), ...]
 	// Deprecated: use AddressData and Gateway
-	GetAddresses() []IP4Address
+	GetPropertyAddresses() ([]IP4Address, error)
 
 	// Array of IP address data objects. All addresses will include "address" (an IP address string), and "prefix" (a uint). Some addresses may include additional attributes.
-	GetAddressData() []IP4AddressData
+	GetPropertyAddressData() ([]IP4AddressData, error)
 
 	// The gateway in use.
-	GetGateway() string
+	GetPropertyGateway() (string, error)
 
 	// Arrays of IPv4 route/prefix/next-hop/metric. All 4 elements of each tuple are in network byte order. 'route' and 'next hop' are IPv4 addresses, while prefix and metric are simple unsigned integers. Essentially: [(route, prefix, next-hop, metric), (route, prefix, next-hop, metric), ...]
 	// Deprecated: use RouteData
-	GetRoutes() []IP4Route
+	GetPropertyRoutes() ([]IP4Route, error)
 
 	// Array of IP route data objects. All routes will include "dest" (an IP address string) and "prefix" (a uint). Some routes may include "next-hop" (an IP address string), "metric" (a uint), and additional attributes.
-	GetRouteData() []IP4RouteData
+	GetPropertyRouteData() ([]IP4RouteData, error)
 
 	// The nameservers in use.
 	// Deprecated: use NameserverData
-	GetNameservers() []string
+	GetPropertyNameservers() ([]string, error)
 
 	// The nameservers in use. Currently only the value "address" is recognized (with an IP address string).
-	GetNameserverData() []IP4NameserverData
+	GetPropertyNameserverData() ([]IP4NameserverData, error)
 
 	// A list of domains this address belongs to.
-	GetDomains() []string
+	GetPropertyDomains() ([]string, error)
 
 	// A list of dns searches.
-	GetSearches() []string
+	GetPropertySearches() ([]string, error)
 
 	// A list of DNS options that modify the behavior of the DNS resolver. See resolv.conf(5) manual page for the list of supported options.
-	GetDnsOptions() []string
+	GetPropertyDnsOptions() ([]string, error)
 
 	// The relative priority of DNS servers.
-	GetDnsPriority() uint32
+	GetPropertyDnsPriority() (uint32, error)
 
 	// The Windows Internet Name Service servers associated with the connection.
-	GetWinsServerData() []string
+	GetPropertyWinsServerData() ([]string, error)
 
 	MarshalJSON() ([]byte, error)
 }
@@ -108,10 +110,14 @@ type ip4Config struct {
 	dbusBase
 }
 
-// Deprecated: use GetAddressData
-func (c *ip4Config) GetAddresses() []IP4Address {
-	addresses := c.getSliceSliceUint32Property(IP4ConfigPropertyAddresses)
+// Deprecated: use GetPropertyAddressData
+func (c *ip4Config) GetPropertyAddresses() ([]IP4Address, error) {
+	addresses, err := c.getSliceSliceUint32Property(IP4ConfigPropertyAddresses)
 	ret := make([]IP4Address, len(addresses))
+
+	if err != nil {
+		return ret, err
+	}
 
 	for i, parts := range addresses {
 		ret[i] = IP4Address{
@@ -121,32 +127,49 @@ func (c *ip4Config) GetAddresses() []IP4Address {
 		}
 	}
 
-	return ret
+	return ret, nil
 }
 
-func (c *ip4Config) GetAddressData() []IP4AddressData {
-	addresses := c.getSliceMapStringVariantProperty(IP4ConfigPropertyAddressData)
+func (c *ip4Config) GetPropertyAddressData() ([]IP4AddressData, error) {
+	addresses, err := c.getSliceMapStringVariantProperty(IP4ConfigPropertyAddressData)
 	ret := make([]IP4AddressData, len(addresses))
 
+	if err != nil {
+		return ret, err
+	}
+
 	for i, address := range addresses {
-		prefix := address["prefix"].Value().(uint32)
+		prefix, ok := address["prefix"].Value().(uint32)
+		if !ok {
+			return ret, errors.New("unexpected variant type for address prefix")
+		}
+
+		address, ok := address["address"].Value().(string)
+		if !ok {
+			return ret, errors.New("unexpected variant type for address")
+		}
 
 		ret[i] = IP4AddressData{
-			Address: address["address"].Value().(string),
+			Address: address,
 			Prefix:  uint8(prefix),
 		}
 	}
-	return ret
+
+	return ret, nil
 }
 
-func (c *ip4Config) GetGateway() string {
+func (c *ip4Config) GetPropertyGateway() (string, error) {
 	return c.getStringProperty(IP4ConfigPropertyGateway)
 }
 
-// Deprecated: use GetRouteData
-func (c *ip4Config) GetRoutes() []IP4Route {
-	routes := c.getSliceSliceUint32Property(IP4ConfigPropertyRoutes)
+// Deprecated: use GetPropertyRouteData
+func (c *ip4Config) GetPropertyRoutes() ([]IP4Route, error) {
+	routes, err := c.getSliceSliceUint32Property(IP4ConfigPropertyRoutes)
 	ret := make([]IP4Route, len(routes))
+
+	if err != nil {
+		return ret, err
+	}
 
 	for i, parts := range routes {
 		ret[i] = IP4Route{
@@ -157,12 +180,16 @@ func (c *ip4Config) GetRoutes() []IP4Route {
 		}
 	}
 
-	return ret
+	return ret, nil
 }
 
-func (c *ip4Config) GetRouteData() []IP4RouteData {
-	routesData := c.getSliceMapStringVariantProperty(IP4ConfigPropertyRouteData)
+func (c *ip4Config) GetPropertyRouteData() ([]IP4RouteData, error) {
+	routesData, err := c.getSliceMapStringVariantProperty(IP4ConfigPropertyRouteData)
 	routes := make([]IP4RouteData, len(routesData))
+
+	if err != nil {
+		return routes, err
+	}
 
 	for _, routeData := range routesData {
 
@@ -171,14 +198,28 @@ func (c *ip4Config) GetRouteData() []IP4RouteData {
 		for routeDataAttributeName, routeDataAttribute := range routeData {
 			switch routeDataAttributeName {
 			case "dest":
-				route.Destination = routeDataAttribute.Value().(string)
+				destination, ok := routeDataAttribute.Value().(string)
+				if !ok {
+					return routes, errors.New("unexpected variant type for dest")
+				}
+				route.Destination = destination
 			case "prefix":
-				prefix, _ := routeDataAttribute.Value().(uint32)
+				prefix, ok := routeDataAttribute.Value().(uint32)
+				if !ok {
+					return routes, errors.New("unexpected variant type for prefix")
+				}
 				route.Prefix = uint8(prefix)
 			case "next-hop":
-				route.NextHop = routeDataAttribute.Value().(string)
+				nextHop, ok := routeDataAttribute.Value().(string)
+				if !ok {
+					return routes, errors.New("unexpected variant type for next-hop")
+				}
+				route.NextHop = nextHop
 			case "metric":
-				metric := routeDataAttribute.Value().(uint32)
+				metric, ok := routeDataAttribute.Value().(uint32)
+				if !ok {
+					return routes, errors.New("unexpected variant type for metric")
+				}
 				route.Metric = uint8(metric)
 			default:
 				route.AdditionalAttributes[routeDataAttributeName] = routeDataAttribute.String()
@@ -187,61 +228,76 @@ func (c *ip4Config) GetRouteData() []IP4RouteData {
 
 		routes = append(routes, route)
 	}
-	return routes
+	return routes, nil
 }
 
-// Deprecated: use GetNameserverData
-func (c *ip4Config) GetNameservers() []string {
-	nameservers := c.getSliceUint32Property(IP4ConfigPropertyNameservers)
+// Deprecated: use GetPropertyNameserverData
+func (c *ip4Config) GetPropertyNameservers() ([]string, error) {
+	nameservers, err := c.getSliceUint32Property(IP4ConfigPropertyNameservers)
 	ret := make([]string, len(nameservers))
+
+	if err != nil {
+		return ret, err
+	}
 
 	for i, ns := range nameservers {
 		ret[i] = ip4ToString(ns)
 	}
 
-	return ret
+	return ret, nil
 }
 
-func (c *ip4Config) GetNameserverData() []IP4NameserverData {
-	nameserversData := c.getSliceMapStringVariantProperty(IP4ConfigPropertyNameserverData)
+func (c *ip4Config) GetPropertyNameserverData() ([]IP4NameserverData, error) {
+	nameserversData, err := c.getSliceMapStringVariantProperty(IP4ConfigPropertyNameserverData)
 	nameservers := make([]IP4NameserverData, len(nameserversData))
 
+	if err != nil {
+		return nameservers, err
+	}
+
 	for _, nameserverData := range nameserversData {
+		address, ok := nameserverData["address"].Value().(string)
+
+		if !ok {
+			return nameservers, errors.New("unexpected variant type for address")
+		}
 
 		nameserver := IP4NameserverData{
-			Address: nameserverData["address"].Value().(string),
+			Address: address,
 		}
 
 		nameservers = append(nameservers, nameserver)
 	}
-	return nameservers
+	return nameservers, nil
 }
 
-func (c *ip4Config) GetDomains() []string {
+func (c *ip4Config) GetPropertyDomains() ([]string, error) {
 	return c.getSliceStringProperty(IP4ConfigPropertyDomains)
 }
 
-func (c *ip4Config) GetSearches() []string {
+func (c *ip4Config) GetPropertySearches() ([]string, error) {
 	return c.getSliceStringProperty(IP4ConfigPropertySearches)
 }
 
-func (c *ip4Config) GetDnsOptions() []string {
+func (c *ip4Config) GetPropertyDnsOptions() ([]string, error) {
 	return c.getSliceStringProperty(IP4ConfigPropertyDnsOptions)
 }
 
-func (c *ip4Config) GetDnsPriority() uint32 {
+func (c *ip4Config) GetPropertyDnsPriority() (uint32, error) {
 	return c.getUint32Property(IP4ConfigPropertyDnsPriority)
 }
 
-func (c *ip4Config) GetWinsServerData() []string {
+func (c *ip4Config) GetPropertyWinsServerData() ([]string, error) {
 	return c.getSliceStringProperty(IP4ConfigPropertyWinsServerData)
 }
 
 func (c *ip4Config) MarshalJSON() ([]byte, error) {
-	return json.Marshal(map[string]interface{}{
-		"Addresses":   c.GetAddressData(),
-		"Routes":      c.GetRouteData(),
-		"Nameservers": c.GetNameserverData(),
-		"Domains":     c.GetDomains(),
-	})
+	m := make(map[string]interface{})
+
+	m["Addresses"], _ = c.GetPropertyAddressData()
+	m["Routes"], _ = c.GetPropertyRouteData()
+	m["Nameservers"], _ = c.GetPropertyNameserverData()
+	m["Domains"], _ = c.GetPropertyDomains()
+
+	return json.Marshal(m)
 }

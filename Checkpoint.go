@@ -2,6 +2,7 @@ package gonetworkmanager
 
 import (
 	"encoding/json"
+
 	"github.com/godbus/dbus"
 )
 
@@ -18,13 +19,13 @@ type Checkpoint interface {
 	GetPath() dbus.ObjectPath
 
 	// Array of object paths for devices which are part of this checkpoint.
-	GetPropertyDevices() []Device
+	GetPropertyDevices() ([]Device, error)
 
 	// The timestamp (in CLOCK_BOOTTIME milliseconds) of checkpoint creation.
-	GetPropertyCreated() int64
+	GetPropertyCreated() (int64, error)
 
 	// Timeout in seconds for automatic rollback, or zero.
-	GetPropertyRollbackTimeout() uint32
+	GetPropertyRollbackTimeout() (uint32, error)
 
 	MarshalJSON() ([]byte, error)
 }
@@ -38,26 +39,28 @@ type checkpoint struct {
 	dbusBase
 }
 
-func (c *checkpoint) GetPropertyDevices() []Device {
-	devicesPaths := c.getSliceObjectProperty(CheckpointPropertyDevices)
-	devices := make([]Device, len(devicesPaths))
+func (c *checkpoint) GetPropertyDevices() ([]Device, error) {
+	devicesPaths, err := c.getSliceObjectProperty(CheckpointPropertyDevices)
+	if err != nil {
+		return nil, err
+	}
 
-	var err error
+	devices := make([]Device, len(devicesPaths))
 	for i, path := range devicesPaths {
 		devices[i], err = NewDevice(path)
 		if err != nil {
-			panic(err)
+			return devices, err
 		}
 	}
 
-	return devices
+	return devices, nil
 }
 
-func (c *checkpoint) GetPropertyCreated() int64 {
+func (c *checkpoint) GetPropertyCreated() (int64, error) {
 	return c.getInt64Property(CheckpointPropertyCreated)
 }
 
-func (c *checkpoint) GetPropertyRollbackTimeout() uint32 {
+func (c *checkpoint) GetPropertyRollbackTimeout() (uint32, error) {
 	return c.getUint32Property(CheckpointPropertyRollbackTimeout)
 }
 
@@ -65,14 +68,12 @@ func (c *checkpoint) GetPath() dbus.ObjectPath {
 	return c.obj.Path()
 }
 
-func (c *checkpoint) marshalMap() map[string]interface{} {
-	return map[string]interface{}{
-		"Devices":         c.GetPropertyDevices(),
-		"Created":         c.GetPropertyCreated(),
-		"RollbackTimeout": c.GetPropertyRollbackTimeout(),
-	}
-}
-
 func (c *checkpoint) MarshalJSON() ([]byte, error) {
-	return json.Marshal(c.marshalMap())
+	m := make(map[string]interface{})
+
+	m["Devices"], _ = c.GetPropertyDevices()
+	m["Created"], _ = c.GetPropertyCreated()
+	m["RollbackTimeout"], _ = c.GetPropertyRollbackTimeout()
+
+	return json.Marshal(m)
 }
