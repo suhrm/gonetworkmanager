@@ -148,6 +148,14 @@ func (d *dbusBase) getInt64Property(iface string) int64 {
 	return value
 }
 
+func (d *dbusBase) getUint64Property(iface string) uint64 {
+	value, ok := d.getProperty(iface).(uint64)
+	if !ok {
+		panic(makeErrVariantType(iface))
+	}
+	return value
+}
+
 func (d *dbusBase) getSliceUint32Property(iface string) []uint32 {
 	value, ok := d.getProperty(iface).([]uint32)
 	if !ok {
