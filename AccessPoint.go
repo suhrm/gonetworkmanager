@@ -9,7 +9,7 @@ import (
 const (
 	AccessPointInterface = NetworkManagerInterface + ".AccessPoint"
 
-	/* Property */
+	/* Properties */
 	AccessPointPropertyFlags      = AccessPointInterface + ".Flags"      // readable   u
 	AccessPointPropertyWpaFlags   = AccessPointInterface + ".WpaFlags"   // readable   u
 	AccessPointPropertyRsnFlags   = AccessPointInterface + ".RsnFlags"   // readable   u
@@ -26,36 +26,36 @@ type AccessPoint interface {
 	GetPath() dbus.ObjectPath
 
 	// GetFlags gets flags describing the capabilities of the access point.
-	GetFlags() uint32
+	GetPropertyFlags() (uint32, error)
 
 	// GetWPAFlags gets flags describing the access point's capabilities
 	// according to WPA (Wifi Protected Access).
-	GetWPAFlags() uint32
+	GetPropertyWPAFlags() (uint32, error)
 
 	// GetRSNFlags gets flags describing the access point's capabilities
 	// according to the RSN (Robust Secure Network) protocol.
-	GetRSNFlags() uint32
+	GetPropertyRSNFlags() (uint32, error)
 
 	// GetSSID returns the Service Set Identifier identifying the access point.
-	GetSSID() string
+	GetPropertySSID() (string, error)
 
 	// GetFrequency gets the radio channel frequency in use by the access point,
 	// in MHz.
-	GetFrequency() uint32
+	GetPropertyFrequency() (uint32, error)
 
 	// GetHWAddress gets the hardware address (BSSID) of the access point.
-	GetHWAddress() string
+	GetPropertyHWAddress() (string, error)
 
 	// GetMode describes the operating mode of the access point.
-	GetMode() Nm80211Mode
+	GetPropertyMode() (Nm80211Mode, error)
 
 	// GetMaxBitrate gets the maximum bitrate this access point is capable of, in
 	// kilobits/second (Kb/s).
-	GetMaxBitrate() uint32
+	GetPropertyMaxBitrate() (uint32, error)
 
 	// GetStrength gets the current signal quality of the access point, in
 	// percent.
-	GetStrength() uint8
+	GetPropertyStrength() (uint8, error)
 
 	MarshalJSON() ([]byte, error)
 }
@@ -73,52 +73,58 @@ func (a *accessPoint) GetPath() dbus.ObjectPath {
 	return a.obj.Path()
 }
 
-func (a *accessPoint) GetFlags() uint32 {
+func (a *accessPoint) GetPropertyFlags() (uint32, error) {
 	return a.getUint32Property(AccessPointPropertyFlags)
 }
 
-func (a *accessPoint) GetWPAFlags() uint32 {
+func (a *accessPoint) GetPropertyWPAFlags() (uint32, error) {
 	return a.getUint32Property(AccessPointPropertyWpaFlags)
 }
 
-func (a *accessPoint) GetRSNFlags() uint32 {
+func (a *accessPoint) GetPropertyRSNFlags() (uint32, error) {
 	return a.getUint32Property(AccessPointPropertyRsnFlags)
 }
 
-func (a *accessPoint) GetSSID() string {
-	return string(a.getSliceByteProperty(AccessPointPropertySsid))
+func (a *accessPoint) GetPropertySSID() (string, error) {
+	v, err := a.getSliceByteProperty(AccessPointPropertySsid)
+	return string(v), err
 }
 
-func (a *accessPoint) GetFrequency() uint32 {
+func (a *accessPoint) GetPropertyFrequency() (uint32, error) {
 	return a.getUint32Property(AccessPointPropertyFrequency)
 }
 
-func (a *accessPoint) GetHWAddress() string {
+func (a *accessPoint) GetPropertyHWAddress() (string, error) {
 	return a.getStringProperty(AccessPointPropertyHwAddress)
 }
 
-func (a *accessPoint) GetMode() Nm80211Mode {
-	return Nm80211Mode(a.getUint32Property(AccessPointPropertyMode))
+func (a *accessPoint) GetPropertyMode() (Nm80211Mode, error) {
+	v, err := a.getUint32Property(AccessPointPropertyMode)
+	return Nm80211Mode(v), err
 }
 
-func (a *accessPoint) GetMaxBitrate() uint32 {
+func (a *accessPoint) GetPropertyMaxBitrate() (uint32, error) {
 	return a.getUint32Property(AccessPointPropertyMaxBitrate)
 }
 
-func (a *accessPoint) GetStrength() uint8 {
+func (a *accessPoint) GetPropertyStrength() (uint8, error) {
 	return a.getUint8Property(AccessPointPropertyStrength)
 }
 
 func (a *accessPoint) MarshalJSON() ([]byte, error) {
-	return json.Marshal(map[string]interface{}{
-		"Flags":      a.GetFlags(),
-		"WPAFlags":   a.GetWPAFlags(),
-		"RSNFlags":   a.GetRSNFlags(),
-		"SSID":       a.GetSSID(),
-		"Frequency":  a.GetFrequency(),
-		"HWAddress":  a.GetHWAddress(),
-		"Mode":       a.GetMode().String(),
-		"MaxBitrate": a.GetMaxBitrate(),
-		"Strength":   a.GetStrength(),
-	})
+	m := make(map[string]interface{})
+
+	m["Flags"], _ = a.GetPropertyFlags()
+	m["WPAFlags"], _ = a.GetPropertyWPAFlags()
+	m["RSNFlags"], _ = a.GetPropertyRSNFlags()
+	m["SSID"], _ = a.GetPropertySSID()
+	m["Frequency"], _ = a.GetPropertyFrequency()
+	m["HWAddress"], _ = a.GetPropertyHWAddress()
+	m["MaxBitrate"], _ = a.GetPropertyMaxBitrate()
+	m["Strength"], _ = a.GetPropertyStrength()
+
+	mode, _ := a.GetPropertyMode()
+	m["Mode"] = mode.String()
+
+	return json.Marshal(m)
 }

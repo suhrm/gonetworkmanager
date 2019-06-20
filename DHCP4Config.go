@@ -9,6 +9,7 @@ import (
 const (
 	DHCP4ConfigInterface = NetworkManagerInterface + ".DHCP4Config"
 
+	// Properties
 	DHCP4ConfigPropertyOptions = DHCP4ConfigInterface + ".Options"
 )
 
@@ -16,7 +17,7 @@ type DHCP4Options map[string]interface{}
 
 type DHCP4Config interface {
 	// GetOptions gets options map of configuration returned by the IPv4 DHCP server.
-	GetOptions() DHCP4Options
+	GetPropertyOptions() (DHCP4Options, error)
 
 	MarshalJSON() ([]byte, error)
 }
@@ -30,19 +31,23 @@ type dhcp4Config struct {
 	dbusBase
 }
 
-func (c *dhcp4Config) GetOptions() DHCP4Options {
-	options := c.getMapStringVariantProperty(DHCP4ConfigPropertyOptions)
+func (c *dhcp4Config) GetPropertyOptions() (DHCP4Options, error) {
+	options, err := c.getMapStringVariantProperty(DHCP4ConfigPropertyOptions)
 	rv := make(DHCP4Options)
+	if err != nil {
+		return rv, err
+	}
 
 	for k, v := range options {
 		rv[k] = v.Value()
 	}
 
-	return rv
+	return rv, nil
 }
 
 func (c *dhcp4Config) MarshalJSON() ([]byte, error) {
-	return json.Marshal(map[string]interface{}{
-		"Options": c.GetOptions(),
-	})
+	m := make(map[string]interface{})
+	m["Options"], _ = c.GetPropertyOptions()
+
+	return json.Marshal(m)
 }

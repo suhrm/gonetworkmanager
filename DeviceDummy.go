@@ -9,6 +9,7 @@ import (
 const (
 	DeviceDummyInterface = DeviceInterface + ".Dummy"
 
+	/* Properties */
 	DeviceDummyPropertyHwAddress = DeviceDummyInterface + ".HwAddress" // readable   s
 )
 
@@ -16,7 +17,7 @@ type DeviceDummy interface {
 	Device
 
 	// Hardware address of the device.
-	GetHwAddress() string
+	GetPropertyHwAddress() (string, error)
 }
 
 func NewDeviceDummy(objectPath dbus.ObjectPath) (DeviceDummy, error) {
@@ -28,12 +29,12 @@ type deviceDummy struct {
 	device
 }
 
-func (d *deviceDummy) GetHwAddress() string {
+func (d *deviceDummy) GetPropertyHwAddress() (string, error) {
 	return d.getStringProperty(DeviceDummyPropertyHwAddress)
 }
 
 func (d *deviceDummy) MarshalJSON() ([]byte, error) {
 	m := d.device.marshalMap()
-	m["HwAddress"] = d.GetHwAddress()
+	m["HwAddress"], _ = d.GetPropertyHwAddress()
 	return json.Marshal(m)
 }

@@ -25,22 +25,22 @@ const (
 
 type Settings interface {
 	// ListConnections gets list the saved network connections known to NetworkManager
-	ListConnections() []Connection
+	ListConnections() ([]Connection, error)
 
-	// AddConnection callWithReturnAndPanic new connection and save it to disk.
-	AddConnection(settings ConnectionSettings) Connection
+	// AddConnection adds new connection and save it to disk.
+	AddConnection(settings ConnectionSettings) (Connection, error)
 
 	// Add new connection but do not save it to disk immediately. This operation does not start the network connection unless (1) device is idle and able to connect to the network described by the new connection, and (2) the connection is allowed to be started automatically. Use the 'Save' method on the connection to save these changes to disk. Note that unsaved changes will be lost if the connection is reloaded from disk (either automatically on file change or due to an explicit ReloadConnections call).
-	AddConnectionUnsaved(settings ConnectionSettings) Connection
+	AddConnectionUnsaved(settings ConnectionSettings) (Connection, error)
 
 	// Save the hostname to persistent configuration.
-	SaveHostname(hostname string)
+	SaveHostname(hostname string) error
 
 	// If true, adding and modifying connections is supported.
-	CanModify() bool
+	GetPropertyCanModify() (bool, error)
 
 	// The machine hostname stored in persistent configuration.
-	Hostname() string
+	GetPropertyHostname() (string, error)
 }
 
 func NewSettings() (Settings, error) {
@@ -52,56 +52,55 @@ type settings struct {
 	dbusBase
 }
 
-func (s *settings) ListConnections() []Connection {
+func (s *settings) ListConnections() ([]Connection, error) {
 	var connectionPaths []dbus.ObjectPath
 
-	s.callWithReturnAndPanic(&connectionPaths, SettingsListConnections)
+	err := s.callWithReturn(&connectionPaths, SettingsListConnections)
+	if err != nil {
+		return nil, err
+	}
+
 	connections := make([]Connection, len(connectionPaths))
 
-	var err error
 	for i, path := range connectionPaths {
 		connections[i], err = NewConnection(path)
 		if err != nil {
-			panic(err)
+			return connections, err
 		}
 	}
 
-	return connections
+	return connections, nil
 }
 
-func (s *settings) AddConnection(settings ConnectionSettings) Connection {
+func (s *settings) AddConnection(settings ConnectionSettings) (Connection, error) {
 	var path dbus.ObjectPath
-	s.callWithReturnAndPanic(&path, SettingsAddConnection, settings)
-	con, err := NewConnection(path)
+	err := s.callWithReturn(&path, SettingsAddConnection, settings)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return con
+
+	return NewConnection(path)
 }
 
-func (s *settings) AddConnectionUnsaved(settings ConnectionSettings) Connection {
+func (s *settings) AddConnectionUnsaved(settings ConnectionSettings) (Connection, error) {
 	var path dbus.ObjectPath
-	s.callWithReturnAndPanic(&path, SettingsAddConnectionUnsaved, settings)
-	con, err := NewConnection(path)
+	err := s.callWithReturn(&path, SettingsAddConnectionUnsaved, settings)
+
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return con
+
+	return NewConnection(path)
 }
 
-func (s *settings) SaveHostname(hostname string) {
-	err := s.call(SettingsSaveHostname, hostname)
-	if err != nil {
-		panic(err)
-	}
+func (s *settings) SaveHostname(hostname string) error {
+	return s.call(SettingsSaveHostname, hostname)
 }
 
-func (s *settings) Hostname() string {
-	hostname := s.getStringProperty(SettingsPropertyHostname)
-
-	return hostname
+func (s *settings) GetPropertyHostname() (string, error) {
+	return s.getStringProperty(SettingsPropertyHostname)
 }
 
-func (s *settings) CanModify() bool {
+func (s *settings) GetPropertyCanModify() (bool, error) {
 	return s.getBoolProperty(SettingsPropertyCanModify)
 }

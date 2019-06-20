@@ -2,14 +2,15 @@ package gonetworkmanager
 
 import (
 	"encoding/json"
+
 	"github.com/godbus/dbus"
 )
 
 const (
 	DeviceIpTunnelInterface = DeviceInterface + ".IPTunnel"
 
-	DeviceIpTunnelPropertyHwAddress = DeviceIpTunnelInterface + "HwAddress" // readable   s
-
+	// Properties
+	DeviceIpTunnelPropertyHwAddress          = DeviceIpTunnelInterface + "HwAddress"           // readable   s
 	DeviceIpTunnelPropertyMode               = DeviceIpTunnelInterface + ".Mode"               // readable   u
 	DeviceIpTunnelPropertyParent             = DeviceIpTunnelInterface + ".Parent"             // readable   o
 	DeviceIpTunnelPropertyLocal              = DeviceIpTunnelInterface + ".Local"              // readable   s
@@ -29,40 +30,40 @@ type DeviceIpTunnel interface {
 	Device
 
 	// The tunneling mode
-	GetMode() uint32
+	GetPropertyMode() (uint32, error)
 
 	// The object path of the parent device.
-	GetParent() Device
+	GetPropertyParent() (Device, error)
 
 	// The local endpoint of the tunnel.
-	GetLocal() string
+	GetPropertyLocal() (string, error)
 
 	// The remote endpoint of the tunnel.
-	GetRemote() string
+	GetPropertyRemote() (string, error)
 
 	// The TTL assigned to tunneled packets. 0 is a special value meaning that packets inherit the TTL value
-	GetTtl() uint8
+	GetPropertyTtl() (uint8, error)
 
 	// The type of service (IPv4) or traffic class (IPv6) assigned to tunneled packets.
-	GetTos() uint8
+	GetPropertyTos() (uint8, error)
 
 	// Whether path MTU discovery is enabled on this tunnel.
-	GetPathMtuDiscovery() bool
+	GetPropertyPathMtuDiscovery() (bool, error)
 
 	// The key used for incoming packets.
-	GetInputKey() string
+	GetPropertyInputKey() (string, error)
 
 	// The key used for outgoing packets.
-	GetOutputKey() string
+	GetPropertyOutputKey() (string, error)
 
 	// How many additional levels of encapsulation are permitted to be prepended to packets. This property applies only to IPv6 tunnels.
-	GetEncapsulationLimit() uint8
+	GetPropertyEncapsulationLimit() (uint8, error)
 
 	// The flow label to assign to tunnel packets. This property applies only to IPv6 tunnels.
-	GetFlowLabel() uint32
+	GetPropertyFlowLabel() (uint32, error)
 
 	// Tunnel flags.
-	GetFlags() uint32
+	GetPropertyFlags() (uint32, error)
 }
 
 func NewDeviceIpTunnel(objectPath dbus.ObjectPath) (DeviceIpTunnel, error) {
@@ -74,76 +75,72 @@ type deviceIpTunnel struct {
 	device
 }
 
-func (d *deviceIpTunnel) GetMode() uint32 {
+func (d *deviceIpTunnel) GetPropertyMode() (uint32, error) {
 	return d.getUint32Property(DeviceIpTunnelPropertyMode)
 }
 
-func (d *deviceIpTunnel) GetParent() Device {
-	path := d.getObjectProperty(DeviceIpTunnelPropertyParent)
-	if path == "/" {
-		return nil
+func (d *deviceIpTunnel) GetPropertyParent() (Device, error) {
+	path, err := d.getObjectProperty(DeviceIpTunnelPropertyParent)
+	if err != nil || path == "/" {
+		return nil, err
 	}
 
-	r, err := DeviceFactory(path)
-	if err != nil {
-		panic(err)
-	}
-	return r
+	return DeviceFactory(path)
 }
 
-func (d *deviceIpTunnel) GetLocal() string {
+func (d *deviceIpTunnel) GetPropertyLocal() (string, error) {
 	return d.getStringProperty(DeviceIpTunnelPropertyLocal)
 }
 
-func (d *deviceIpTunnel) GetRemote() string {
+func (d *deviceIpTunnel) GetPropertyRemote() (string, error) {
 	return d.getStringProperty(DeviceIpTunnelPropertyRemote)
 }
 
-func (d *deviceIpTunnel) GetTtl() uint8 {
+func (d *deviceIpTunnel) GetPropertyTtl() (uint8, error) {
 	return d.getUint8Property(DeviceIpTunnelPropertyTtl)
 }
 
-func (d *deviceIpTunnel) GetTos() uint8 {
+func (d *deviceIpTunnel) GetPropertyTos() (uint8, error) {
 	return d.getUint8Property(DeviceIpTunnelPropertyTos)
 }
 
-func (d *deviceIpTunnel) GetPathMtuDiscovery() bool {
+func (d *deviceIpTunnel) GetPropertyPathMtuDiscovery() (bool, error) {
 	return d.getBoolProperty(DeviceIpTunnelPropertyPathMtuDiscovery)
 }
 
-func (d *deviceIpTunnel) GetInputKey() string {
+func (d *deviceIpTunnel) GetPropertyInputKey() (string, error) {
 	return d.getStringProperty(DeviceIpTunnelPropertyInputKey)
 }
 
-func (d *deviceIpTunnel) GetOutputKey() string {
+func (d *deviceIpTunnel) GetPropertyOutputKey() (string, error) {
 	return d.getStringProperty(DeviceIpTunnelPropertyOutputKey)
 }
 
-func (d *deviceIpTunnel) GetEncapsulationLimit() uint8 {
+func (d *deviceIpTunnel) GetPropertyEncapsulationLimit() (uint8, error) {
 	return d.getUint8Property(DeviceIpTunnelPropertyEncapsulationLimit)
 }
 
-func (d *deviceIpTunnel) GetFlowLabel() uint32 {
+func (d *deviceIpTunnel) GetPropertyFlowLabel() (uint32, error) {
 	return d.getUint32Property(DeviceIpTunnelPropertyFlowLabel)
 }
 
-func (d *deviceIpTunnel) GetFlags() uint32 {
+func (d *deviceIpTunnel) GetPropertyFlags() (uint32, error) {
 	return d.getUint32Property(DeviceIpTunnelPropertyFlags)
 }
 
 func (d *deviceIpTunnel) MarshalJSON() ([]uint8, error) {
 	m := d.device.marshalMap()
-	m["Mode"] = d.GetMode()
-	m["Parent"] = d.GetParent()
-	m["Local"] = d.GetLocal()
-	m["Remote"] = d.GetRemote()
-	m["Ttl"] = d.GetTtl()
-	m["Tos"] = d.GetTos()
-	m["PathMtuDiscovery"] = d.GetPathMtuDiscovery()
-	m["InputKey"] = d.GetInputKey()
-	m["OutputKey"] = d.GetOutputKey()
-	m["EncapsulationLimit"] = d.GetEncapsulationLimit()
-	m["FlowLabel"] = d.GetFlowLabel()
-	m["Flags"] = d.GetFlags()
+	m["Mode"], _ = d.GetPropertyMode()
+	m["Parent"], _ = d.GetPropertyParent()
+	m["Local"], _ = d.GetPropertyLocal()
+	m["Remote"], _ = d.GetPropertyRemote()
+	m["Ttl"], _ = d.GetPropertyTtl()
+	m["Tos"], _ = d.GetPropertyTos()
+	m["PathMtuDiscovery"], _ = d.GetPropertyPathMtuDiscovery()
+	m["InputKey"], _ = d.GetPropertyInputKey()
+	m["OutputKey"], _ = d.GetPropertyOutputKey()
+	m["EncapsulationLimit"], _ = d.GetPropertyEncapsulationLimit()
+	m["FlowLabel"], _ = d.GetPropertyFlowLabel()
+	m["Flags"], _ = d.GetPropertyFlags()
 	return json.Marshal(m)
 }
