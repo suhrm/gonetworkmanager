@@ -98,7 +98,7 @@ type NetworkManager interface {
 	AddAndActivateWirelessConnection(connection map[string]map[string]interface{}, device Device, accessPoint AccessPoint) (ActiveConnection, error)
 
 	// Deactivate an active connection.
-	DeactivateConnection(connection Connection) error
+	DeactivateConnection(connection ActiveConnection) error
 
 	// Control the NetworkManager daemon's sleep state. When asleep, all interfaces that it manages are deactivated. When awake, devices are available to be activated. This command should not be called directly by users or clients; it is intended for system suspend/resume tracking.
 	// sleepnWake: Indicates whether the NetworkManager daemon should sleep or wake.
@@ -202,6 +202,9 @@ type NetworkManager interface {
 
 	// Indicates whether connectivity checking is enabled. This property can also be written to to disable connectivity checking (as a privacy control panel might want to do).
 	GetPropertyConnectivityCheckEnabled() (bool, error)
+
+	// NetworkManager Settings
+	GetPropertySettings() (Settings, error)
 
 	// Dictionary of global DNS settings where the key is one of "searches", "options" and "domains". The values for the "searches" and "options" keys are string arrays describing the list of search domains and resolver options, respectively. The value of the "domains" key is a second-level dictionary, where each key is a domain name, and each key's value is a third-level dictionary with the keys "servers" and "options". "servers" is a string array of DNS servers, "options" is a string array of domain-specific options.
 	//GetPropertyGlobalDnsConfiguration() []interface{}
@@ -345,7 +348,7 @@ func (nm *networkManager) AddAndActivateWirelessConnection(connection map[string
 	return
 }
 
-func (nm *networkManager) DeactivateConnection(c Connection) error {
+func (nm *networkManager) DeactivateConnection(c ActiveConnection) error {
 	return nm.call(NetworkManagerDeactivateConnection, c.GetPath())
 }
 
