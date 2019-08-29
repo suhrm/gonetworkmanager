@@ -203,9 +203,6 @@ type NetworkManager interface {
 	// Indicates whether connectivity checking is enabled. This property can also be written to to disable connectivity checking (as a privacy control panel might want to do).
 	GetPropertyConnectivityCheckEnabled() (bool, error)
 
-	// NetworkManager Settings
-	GetPropertySettings() (Settings, error)
-
 	// Dictionary of global DNS settings where the key is one of "searches", "options" and "domains". The values for the "searches" and "options" keys are string arrays describing the list of search domains and resolver options, respectively. The value of the "domains" key is a second-level dictionary, where each key is a domain name, and each key's value is a third-level dictionary with the keys "servers" and "options". "servers" is a string array of DNS servers, "options" is a string array of domain-specific options.
 	//GetPropertyGlobalDnsConfiguration() []interface{}
 
