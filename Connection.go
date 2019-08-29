@@ -46,6 +46,12 @@ type Connection interface {
 	// separately using the GetSecrets() method.
 	GetSettings() (ConnectionSettings, error)
 
+	// Get the secrets belonging to this network configuration. Only secrets from
+	// persistent storage or a Secret Agent running in the requestor's session
+	// will be returned. The user will never be prompted for secrets as a result
+	// of this request.
+	GetSecrets(settingName string) (ConnectionSettings, error)
+
 	// Clear the secrets belonging to this network connection profile.
 	ClearSecrets() error
 
@@ -92,6 +98,27 @@ func (c *connection) Delete() error {
 func (c *connection) GetSettings() (ConnectionSettings, error) {
 	var settings map[string]map[string]dbus.Variant
 	err := c.callWithReturn(&settings, ConnectionGetSettings)
+
+	if err != nil {
+		return nil, err
+	}
+
+	rv := make(ConnectionSettings)
+
+	for k1, v1 := range settings {
+		rv[k1] = make(map[string]interface{})
+
+		for k2, v2 := range v1 {
+			rv[k1][k2] = v2.Value()
+		}
+	}
+
+	return rv, nil
+}
+
+func (c *connection) GetSecrets(settingName string) (ConnectionSettings, error) {
+	var settings map[string]map[string]dbus.Variant
+	err := c.callWithReturn(&settings, ConnectionGetSecrets, settingName)
 
 	if err != nil {
 		return nil, err
