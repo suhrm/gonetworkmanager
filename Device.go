@@ -101,6 +101,9 @@ type Device interface {
 	// The current state of the device.
 	GetPropertyState() (NmDeviceState, error)
 
+	// Object path of an ActiveConnection object that "owns" this device during activation. The ActiveConnection object tracks the life-cycle of a connection to a specific network and implements the org.freedesktop.NetworkManager.Connection.Active D-Bus interface.
+	GetPropertyActiveConnection() (ActiveConnection, error)
+
 	// Object path of the Ip4Config object describing the configuration of the device. Only valid when the device is in the NM_DEVICE_STATE_ACTIVATED state.
 	GetPropertyIP4Config() (IP4Config, error)
 
@@ -191,6 +194,15 @@ func (d *device) GetPropertyFirmwareVersion() (string, error) {
 func (d *device) GetPropertyState() (NmDeviceState, error) {
 	v, err := d.getUint32Property(DevicePropertyState)
 	return NmDeviceState(v), err
+}
+
+func (d *device) GetPropertyActiveConnection() (ActiveConnection, error) {
+	path, err := d.getObjectProperty(DevicePropertyActiveConnection)
+	if err != nil || path == "/" {
+		return nil, err
+	}
+
+	return NewActiveConnection(path)
 }
 
 func (d *device) GetPropertyIP4Config() (IP4Config, error) {
