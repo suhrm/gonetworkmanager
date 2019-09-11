@@ -98,7 +98,7 @@ type NetworkManager interface {
 	AddAndActivateWirelessConnection(connection map[string]map[string]interface{}, device Device, accessPoint AccessPoint) (ActiveConnection, error)
 
 	// Deactivate an active connection.
-	DeactivateConnection(connection Connection) error
+	DeactivateConnection(connection ActiveConnection) error
 
 	// Control the NetworkManager daemon's sleep state. When asleep, all interfaces that it manages are deactivated. When awake, devices are available to be activated. This command should not be called directly by users or clients; it is intended for system suspend/resume tracking.
 	// sleepnWake: Indicates whether the NetworkManager daemon should sleep or wake.
@@ -345,7 +345,7 @@ func (nm *networkManager) AddAndActivateWirelessConnection(connection map[string
 	return
 }
 
-func (nm *networkManager) DeactivateConnection(c Connection) error {
+func (nm *networkManager) DeactivateConnection(c ActiveConnection) error {
 	return nm.call(NetworkManagerDeactivateConnection, c.GetPath())
 }
 
