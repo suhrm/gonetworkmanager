@@ -176,7 +176,11 @@ func (d *deviceWireless) GetPropertyLastScan() (int64, error) {
 }
 
 func (d *deviceWireless) MarshalJSON() ([]byte, error) {
-	m := d.device.marshalMap()
+	m, err := d.device.marshalMap()
+	if err != nil {
+		return nil, err
+	}
+
 	m["AccessPoints"], _ = d.GetPropertyAccessPoints()
 	m["HwAddress"], _ = d.GetPropertyHwAddress()
 	m["PermHwAddress"], _ = d.GetPropertyPermHwAddress()

@@ -66,7 +66,11 @@ func (d *deviceWired) GetPropertyCarrier() (bool, error) {
 }
 
 func (d *deviceWired) MarshalJSON() ([]byte, error) {
-	m := d.device.marshalMap()
+	m, err := d.device.marshalMap()
+	if err != nil {
+		return nil, err
+	}
+
 	m["HwAddress"], _ = d.GetPropertyHwAddress()
 	m["PermHwAddress"], _ = d.GetPropertyPermHwAddress()
 	m["Speed"], _ = d.GetPropertySpeed()

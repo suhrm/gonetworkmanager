@@ -129,7 +129,11 @@ func (d *deviceIpTunnel) GetPropertyFlags() (uint32, error) {
 }
 
 func (d *deviceIpTunnel) MarshalJSON() ([]uint8, error) {
-	m := d.device.marshalMap()
+	m, err := d.device.marshalMap()
+	if err != nil {
+		return nil, err
+	}
+
 	m["Mode"], _ = d.GetPropertyMode()
 	m["Parent"], _ = d.GetPropertyParent()
 	m["Local"], _ = d.GetPropertyLocal()

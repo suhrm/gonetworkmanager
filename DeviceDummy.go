@@ -34,7 +34,11 @@ func (d *deviceDummy) GetPropertyHwAddress() (string, error) {
 }
 
 func (d *deviceDummy) MarshalJSON() ([]byte, error) {
-	m := d.device.marshalMap()
+	m, err := d.device.marshalMap()
+	if err != nil {
+		return nil, err
+	}
+
 	m["HwAddress"], _ = d.GetPropertyHwAddress()
 	return json.Marshal(m)
 }

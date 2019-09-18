@@ -42,7 +42,11 @@ func (d *deviceGeneric) GetPropertyTypeDescription() (string, error) {
 }
 
 func (d *deviceGeneric) MarshalJSON() ([]byte, error) {
-	m := d.device.marshalMap()
+	m, err := d.device.marshalMap()
+	if err != nil {
+		return nil, err
+	}
+
 	m["HwAddress"], _ = d.GetPropertyHwAddress()
 	m["TypeDescription"], _ = d.GetPropertyTypeDescription()
 	return json.Marshal(m)

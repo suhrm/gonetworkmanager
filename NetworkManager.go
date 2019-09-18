@@ -558,112 +558,112 @@ func (nm *networkManager) Unsubscribe() {
 
 func (nm *networkManager) MarshalJSON() ([]byte, error) {
 
-	Devices, err := n.GetPropertyDevices()
+	Devices, err := nm.GetPropertyDevices()
 	if err != nil {
 		return nil, err
 	}
 
-	AllDevices, err := n.GetPropertyAllDevices()
+	AllDevices, err := nm.GetPropertyAllDevices()
 	if err != nil {
 		return nil, err
 	}
 
-	Checkpoints, err := n.GetPropertyCheckpoints()
+	Checkpoints, err := nm.GetPropertyCheckpoints()
 	if err != nil {
 		return nil, err
 	}
 
-	NetworkingEnabled, err := n.GetPropertyNetworkingEnabled()
+	NetworkingEnabled, err := nm.GetPropertyNetworkingEnabled()
 	if err != nil {
 		return nil, err
 	}
 
-	WirelessEnabled, err := n.GetPropertyWirelessEnabled()
+	WirelessEnabled, err := nm.GetPropertyWirelessEnabled()
 	if err != nil {
 		return nil, err
 	}
 
-	WirelessHardwareEnabled, err := n.GetPropertyWirelessHardwareEnabled()
+	WirelessHardwareEnabled, err := nm.GetPropertyWirelessHardwareEnabled()
 	if err != nil {
 		return nil, err
 	}
 
-	WwanEnabled, err := n.GetPropertyWwanEnabled()
+	WwanEnabled, err := nm.GetPropertyWwanEnabled()
 	if err != nil {
 		return nil, err
 	}
 
-	WwanHardwareEnabled, err := n.GetPropertyWwanHardwareEnabled()
+	WwanHardwareEnabled, err := nm.GetPropertyWwanHardwareEnabled()
 	if err != nil {
 		return nil, err
 	}
 
-	WimaxEnabled, err := n.GetPropertyWimaxEnabled()
+	WimaxEnabled, err := nm.GetPropertyWimaxEnabled()
 	if err != nil {
 		return nil, err
 	}
 
-	WimaxHardwareEnabled, err := n.GetPropertyWimaxHardwareEnabled()
+	WimaxHardwareEnabled, err := nm.GetPropertyWimaxHardwareEnabled()
 	if err != nil {
 		return nil, err
 	}
 
-	ActiveConnections, err := n.GetPropertyActiveConnections()
+	ActiveConnections, err := nm.GetPropertyActiveConnections()
 	if err != nil {
 		return nil, err
 	}
 
-	PrimaryConnection, err := n.GetPropertyPrimaryConnection()
+	PrimaryConnection, err := nm.GetPropertyPrimaryConnection()
 	if err != nil {
 		return nil, err
 	}
 
-	PrimaryConnectionType, err := n.GetPropertyPrimaryConnectionType()
+	PrimaryConnectionType, err := nm.GetPropertyPrimaryConnectionType()
 	if err != nil {
 		return nil, err
 	}
 
-	Metered, err := n.GetPropertyMetered()
+	Metered, err := nm.GetPropertyMetered()
 	if err != nil {
 		return nil, err
 	}
 
-	ActivatingConnection, err := n.GetPropertyActivatingConnection()
+	ActivatingConnection, err := nm.GetPropertyActivatingConnection()
 	if err != nil {
 		return nil, err
 	}
 
-	Startup, err := n.GetPropertyStartup()
+	Startup, err := nm.GetPropertyStartup()
 	if err != nil {
 		return nil, err
 	}
 
-	Version, err := n.GetPropertyVersion()
+	Version, err := nm.GetPropertyVersion()
 	if err != nil {
 		return nil, err
 	}
 
-	Capabilities, err := n.GetPropertyCapabilities()
+	Capabilities, err := nm.GetPropertyCapabilities()
 	if err != nil {
 		return nil, err
 	}
 
-	State, err := n.GetPropertyState()
+	State, err := nm.GetPropertyState()
 	if err != nil {
 		return nil, err
 	}
 
-	Connectivity, err := n.GetPropertyConnectivity()
+	Connectivity, err := nm.GetPropertyConnectivity()
 	if err != nil {
 		return nil, err
 	}
 
-	ConnectivityCheckAvailable, err := n.GetPropertyConnectivityCheckAvailable()
+	ConnectivityCheckAvailable, err := nm.GetPropertyConnectivityCheckAvailable()
 	if err != nil {
 		return nil, err
 	}
 
-	ConnectivityCheckEnabled, err := n.GetPropertyConnectivityCheckEnabled()
+	ConnectivityCheckEnabled, err := nm.GetPropertyConnectivityCheckEnabled()
 	if err != nil {
 		return nil, err
 	}

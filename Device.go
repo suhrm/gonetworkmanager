@@ -2,7 +2,6 @@ package gonetworkmanager
 
 import (
 	"encoding/json"
-	"errors"
 
 	"github.com/godbus/dbus"
 )
@@ -296,11 +295,11 @@ func (d *device) GetPropertyReal() (bool, error) {
 }
 
 func (d *device) marshalMap() (map[string]interface{}, error) {
-	Interface, err := d.GetInterface()
+	Interface, err := d.GetPropertyInterface()
 	if err != nil {
 		return nil, err
 	}
-	IPinterface, err := d.GetPropertyIpInterface()
+	IpInterface, err := d.GetPropertyIpInterface()
 	if err != nil {
 		return nil, err
 	}
@@ -327,7 +326,7 @@ func (d *device) marshalMap() (map[string]interface{}, error) {
 
 	return map[string]interface{}{
 		"Interface":            Interface,
-		"IP interface":         IPinterface,
+		"IP interface":         IpInterface,
 		"State":                State.String(),
 		"IP4Config":            IP4Config,
 		"DHCP4Config":          DHCP4Config,
