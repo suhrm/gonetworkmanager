@@ -96,8 +96,11 @@ func (a *activeConnection) GetPropertyConnection() (Connection, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	return NewConnection(path)
+	con, err := NewConnection(path)
+	if err != nil {
+		return nil, err
+	}
+	return con, nil
 }
 
 func (a *activeConnection) GetPropertySpecificObject() (AccessPoint, error) {
@@ -105,8 +108,11 @@ func (a *activeConnection) GetPropertySpecificObject() (AccessPoint, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	return NewAccessPoint(path)
+	ap, err := NewAccessPoint(path)
+	if err != nil {
+		return nil, err
+	}
+	return ap, nil
 }
 
 func (a *activeConnection) GetPropertyID() (string, error) {
@@ -126,17 +132,15 @@ func (a *activeConnection) GetPropertyDevices() ([]Device, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	devices := make([]Device, len(paths))
 	for i, path := range paths {
 		devices[i], err = DeviceFactory(path)
 		if err != nil {
-			return devices, err
+			return nil, err
 		}
 	}
 	return devices, nil
 }
-
 func (a *activeConnection) GetPropertyState() (NmActiveConnectionState, error) {
 	v, err := a.getUint32Property(ActiveConnectionPropertyState)
 	return NmActiveConnectionState(v), err
@@ -147,25 +151,35 @@ func (a *activeConnection) GetPropertyStateFlags() (uint32, error) {
 }
 
 func (a *activeConnection) GetPropertyDefault() (bool, error) {
-	return a.getBoolProperty(ActiveConnectionPropertyDefault)
+	b, err := a.getProperty(ActiveConnectionPropertyDefault)
+	if err != nil {
+		return false, err
+	}
+	return b.(bool), nil
 }
 
 func (a *activeConnection) GetPropertyIP4Config() (IP4Config, error) {
 	path, err := a.getObjectProperty(ActiveConnectionPropertyIp4Config)
-	if err != nil || path == "/" {
+	if err != nil {
 		return nil, err
 	}
-
-	return NewIP4Config(path)
+	r, err := NewIP4Config(path)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
 }
 
 func (a *activeConnection) GetPropertyDHCP4Config() (DHCP4Config, error) {
 	path, err := a.getObjectProperty(ActiveConnectionPropertyDhcp4Config)
-	if err != nil || path == "/" {
+	if err != nil {
 		return nil, err
 	}
-
-	return NewDHCP4Config(path)
+	r, err := NewDHCP4Config(path)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
 }
 
 func (a *activeConnection) GetPropertyDefault6() (bool, error) {
@@ -191,7 +205,11 @@ func (a *activeConnection) GetPropertyDHCP6Config() (DHCP6Config, error) {
 }
 
 func (a *activeConnection) GetPropertyVPN() (bool, error) {
-	return a.getBoolProperty(ActiveConnectionPropertyVpn)
+	ret, err := a.getProperty(ActiveConnectionPropertyVpn)
+	if err != nil {
+		return false, err
+	}
+	return ret.(bool), nil
 }
 
 func (a *activeConnection) GetPropertyMaster() (Device, error) {
@@ -199,6 +217,9 @@ func (a *activeConnection) GetPropertyMaster() (Device, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	return DeviceFactory(path)
+	r, err := DeviceFactory(path)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
 }

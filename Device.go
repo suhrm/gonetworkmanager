@@ -2,6 +2,7 @@ package gonetworkmanager
 
 import (
 	"encoding/json"
+	"errors"
 
 	"github.com/godbus/dbus"
 )
@@ -192,8 +193,11 @@ func (d *device) GetPropertyFirmwareVersion() (string, error) {
 }
 
 func (d *device) GetPropertyState() (NmDeviceState, error) {
-	v, err := d.getUint32Property(DevicePropertyState)
-	return NmDeviceState(v), err
+	r, err := d.getUint32Property(DevicePropertyState)
+	if err != nil {
+		return NmDeviceStateFailed, err
+	}
+	return NmDeviceState(r), nil
 }
 
 func (d *device) GetPropertyActiveConnection() (ActiveConnection, error) {
@@ -291,24 +295,51 @@ func (d *device) GetPropertyReal() (bool, error) {
 	return d.getBoolProperty(DevicePropertyReal)
 }
 
-func (d *device) marshalMap() map[string]interface{} {
-	m := make(map[string]interface{})
+func (d *device) marshalMap() (map[string]interface{}, error) {
+	Interface, err := d.GetInterface()
+	if err != nil {
+		return nil, err
+	}
+	IPinterface, err := d.GetPropertyIpInterface()
+	if err != nil {
+		return nil, err
+	}
+	State, err := d.GetPropertyState()
+	if err != nil {
+		return nil, err
+	}
+	IP4Config, err := d.GetPropertyIP4Config()
+	if err != nil {
+		return nil, err
+	}
+	DHCP4Config, err := d.GetPropertyDHCP4Config()
+	if err != nil {
+		return nil, err
+	}
+	DeviceType, err := d.GetPropertyDeviceType()
+	if err != nil {
+		return nil, err
+	}
+	AvailableConnections, err := d.GetPropertyAvailableConnections()
+	if err != nil {
+		return nil, err
+	}
 
-	m["Interface"], _ = d.GetPropertyInterface()
-	m["IPInterface"], _ = d.GetPropertyIpInterface()
-	m["IP4Config"], _ = d.GetPropertyIP4Config()
-	m["DHCP4Config"], _ = d.GetPropertyDHCP4Config()
-	m["AvailableConnections"], _ = d.GetPropertyAvailableConnections()
-
-	state, _ := d.GetPropertyState()
-	m["State"] = state.String()
-
-	deviceType, _ := d.GetPropertyDeviceType()
-	m["DeviceType"] = deviceType.String()
-
-	return m
+	return map[string]interface{}{
+		"Interface":            Interface,
+		"IP interface":         IPinterface,
+		"State":                State.String(),
+		"IP4Config":            IP4Config,
+		"DHCP4Config":          DHCP4Config,
+		"DeviceType":           DeviceType.String(),
+		"AvailableConnections": AvailableConnections,
+	}, nil
 }
 
 func (d *device) MarshalJSON() ([]byte, error) {
-	return json.Marshal(d.marshalMap())
+	m, err := d.marshalMap()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(m)
 }

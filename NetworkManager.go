@@ -557,30 +557,139 @@ func (nm *networkManager) Unsubscribe() {
 }
 
 func (nm *networkManager) MarshalJSON() ([]byte, error) {
-	m := make(map[string]interface{})
 
-	m["Devices"], _ = nm.GetPropertyDevices()
-	m["AllDevices"], _ = nm.GetPropertyAllDevices()
-	m["Checkpoints"], _ = nm.GetPropertyCheckpoints()
-	m["NetworkingEnabled"], _ = nm.GetPropertyNetworkingEnabled()
-	m["WirelessEnabled"], _ = nm.GetPropertyWirelessEnabled()
-	m["WirelessHardwareEnabled"], _ = nm.GetPropertyWirelessHardwareEnabled()
-	m["WwanEnabled"], _ = nm.GetPropertyWwanEnabled()
-	m["WwanHardwareEnabled"], _ = nm.GetPropertyWwanHardwareEnabled()
-	m["WimaxEnabled"], _ = nm.GetPropertyWimaxEnabled()
-	m["WimaxHardwareEnabled"], _ = nm.GetPropertyWimaxHardwareEnabled()
-	m["ActiveConnections"], _ = nm.GetPropertyActiveConnections()
-	m["PrimaryConnection"], _ = nm.GetPropertyPrimaryConnection()
-	m["PrimaryConnectionType"], _ = nm.GetPropertyPrimaryConnectionType()
-	m["Metered"], _ = nm.GetPropertyMetered()
-	m["ActivatingConnection"], _ = nm.GetPropertyActivatingConnection()
-	m["Startup"], _ = nm.GetPropertyStartup()
-	m["Version"], _ = nm.GetPropertyVersion()
-	m["Capabilities"], _ = nm.GetPropertyCapabilities()
-	m["State"], _ = nm.GetPropertyState()
-	m["Connectivity"], _ = nm.GetPropertyConnectivity()
-	m["ConnectivityCheckAvailable"], _ = nm.GetPropertyConnectivityCheckAvailable()
-	m["ConnectivityCheckEnabled"], _ = nm.GetPropertyConnectivityCheckEnabled()
+	Devices, err := n.GetPropertyDevices()
+	if err != nil {
+		return nil, err
+	}
 
-	return json.Marshal(m)
+	AllDevices, err := n.GetPropertyAllDevices()
+	if err != nil {
+		return nil, err
+	}
+
+	Checkpoints, err := n.GetPropertyCheckpoints()
+	if err != nil {
+		return nil, err
+	}
+
+	NetworkingEnabled, err := n.GetPropertyNetworkingEnabled()
+	if err != nil {
+		return nil, err
+	}
+
+	WirelessEnabled, err := n.GetPropertyWirelessEnabled()
+	if err != nil {
+		return nil, err
+	}
+
+	WirelessHardwareEnabled, err := n.GetPropertyWirelessHardwareEnabled()
+	if err != nil {
+		return nil, err
+	}
+
+	WwanEnabled, err := n.GetPropertyWwanEnabled()
+	if err != nil {
+		return nil, err
+	}
+
+	WwanHardwareEnabled, err := n.GetPropertyWwanHardwareEnabled()
+	if err != nil {
+		return nil, err
+	}
+
+	WimaxEnabled, err := n.GetPropertyWimaxEnabled()
+	if err != nil {
+		return nil, err
+	}
+
+	WimaxHardwareEnabled, err := n.GetPropertyWimaxHardwareEnabled()
+	if err != nil {
+		return nil, err
+	}
+
+	ActiveConnections, err := n.GetPropertyActiveConnections()
+	if err != nil {
+		return nil, err
+	}
+
+	PrimaryConnection, err := n.GetPropertyPrimaryConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	PrimaryConnectionType, err := n.GetPropertyPrimaryConnectionType()
+	if err != nil {
+		return nil, err
+	}
+
+	Metered, err := n.GetPropertyMetered()
+	if err != nil {
+		return nil, err
+	}
+
+	ActivatingConnection, err := n.GetPropertyActivatingConnection()
+	if err != nil {
+		return nil, err
+	}
+
+	Startup, err := n.GetPropertyStartup()
+	if err != nil {
+		return nil, err
+	}
+
+	Version, err := n.GetPropertyVersion()
+	if err != nil {
+		return nil, err
+	}
+
+	Capabilities, err := n.GetPropertyCapabilities()
+	if err != nil {
+		return nil, err
+	}
+
+	State, err := n.GetPropertyState()
+	if err != nil {
+		return nil, err
+	}
+
+	Connectivity, err := n.GetPropertyConnectivity()
+	if err != nil {
+		return nil, err
+	}
+
+	ConnectivityCheckAvailable, err := n.GetPropertyConnectivityCheckAvailable()
+	if err != nil {
+		return nil, err
+	}
+
+	ConnectivityCheckEnabled, err := n.GetPropertyConnectivityCheckEnabled()
+	if err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(map[string]interface{}{
+		"Devices":                    Devices,
+		"AllDevices":                 AllDevices,
+		"Checkpoints":                Checkpoints,
+		"NetworkingEnabled":          NetworkingEnabled,
+		"WirelessEnabled":            WirelessEnabled,
+		"WirelessHardwareEnabled":    WirelessHardwareEnabled,
+		"WwanEnabled":                WwanEnabled,
+		"WwanHardwareEnabled":        WwanHardwareEnabled,
+		"WimaxEnabled":               WimaxEnabled,
+		"WimaxHardwareEnabled":       WimaxHardwareEnabled,
+		"ActiveConnections":          ActiveConnections,
+		"PrimaryConnection":          PrimaryConnection,
+		"PrimaryConnectionType":      PrimaryConnectionType,
+		"Metered":                    Metered,
+		"ActivatingConnection":       ActivatingConnection,
+		"Startup":                    Startup,
+		"Version":                    Version,
+		"Capabilities":               Capabilities,
+		"State":                      State,
+		"Connectivity":               Connectivity,
+		"ConnectivityCheckAvailable": ConnectivityCheckAvailable,
+		"ConnectivityCheckEnabled":   ConnectivityCheckEnabled,
+	})
 }

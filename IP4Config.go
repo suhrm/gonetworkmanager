@@ -292,12 +292,27 @@ func (c *ip4Config) GetPropertyWinsServerData() ([]string, error) {
 }
 
 func (c *ip4Config) MarshalJSON() ([]byte, error) {
-	m := make(map[string]interface{})
+	Addresses, err := c.GetPropertyAddressData()
+	if err != nil {
+		return nil, err
+	}
+	Routes, err := c.GetPropertyRouteData()
+	if err != nil {
+		return nil, err
+	}
+	Nameservers, err := c.GetPropertyNameserverData()
+	if err != nil {
+		return nil, err
+	}
+	Domains, err := c.GetPropertyDomains()
+	if err != nil {
+		return nil, err
+	}
 
-	m["Addresses"], _ = c.GetPropertyAddressData()
-	m["Routes"], _ = c.GetPropertyRouteData()
-	m["Nameservers"], _ = c.GetPropertyNameserverData()
-	m["Domains"], _ = c.GetPropertyDomains()
-
-	return json.Marshal(m)
+	return json.Marshal(map[string]interface{}{
+		"Addresses":   Addresses,
+		"Routes":      Routes,
+		"Nameservers": Nameservers,
+		"Domains":     Domains,
+	})
 }

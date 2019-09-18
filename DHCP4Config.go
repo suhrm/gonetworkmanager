@@ -46,8 +46,11 @@ func (c *dhcp4Config) GetPropertyOptions() (DHCP4Options, error) {
 }
 
 func (c *dhcp4Config) MarshalJSON() ([]byte, error) {
-	m := make(map[string]interface{})
-	m["Options"], _ = c.GetPropertyOptions()
-
-	return json.Marshal(m)
+	Options, err := c.GetOptions()
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(map[string]interface{}{
+		"Options": Options,
+	})
 }

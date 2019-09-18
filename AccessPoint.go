@@ -86,8 +86,11 @@ func (a *accessPoint) GetPropertyRSNFlags() (uint32, error) {
 }
 
 func (a *accessPoint) GetPropertySSID() (string, error) {
-	v, err := a.getSliceByteProperty(AccessPointPropertySsid)
-	return string(v), err
+	r, err := a.getSliceByteProperty(AccessPointPropertySsid)
+	if err != nil {
+		return "", err
+	}
+	return string(r), nil
 }
 
 func (a *accessPoint) GetPropertyFrequency() (uint32, error) {
@@ -99,8 +102,11 @@ func (a *accessPoint) GetPropertyHWAddress() (string, error) {
 }
 
 func (a *accessPoint) GetPropertyMode() (Nm80211Mode, error) {
-	v, err := a.getUint32Property(AccessPointPropertyMode)
-	return Nm80211Mode(v), err
+	r, err := a.getUint32Property(AccessPointPropertyMode)
+	if err != nil {
+		return Nm80211ModeUnknown, err
+	}
+	return Nm80211Mode(r), nil
 }
 
 func (a *accessPoint) GetPropertyMaxBitrate() (uint32, error) {
@@ -112,19 +118,52 @@ func (a *accessPoint) GetPropertyStrength() (uint8, error) {
 }
 
 func (a *accessPoint) MarshalJSON() ([]byte, error) {
-	m := make(map[string]interface{})
+	Flags, err := a.GetPropertyFlags()
+	if err != nil {
+		return nil, err
+	}
+	WPAFlags, err := a.GetPropertyWPAFlags()
+	if err != nil {
+		return nil, err
+	}
+	RSNFlags, err := a.GetPropertyRSNFlags()
+	if err != nil {
+		return nil, err
+	}
+	SSID, err := a.GetPropertySSID()
+	if err != nil {
+		return nil, err
+	}
+	Frequency, err := a.GetPropertyFrequency()
+	if err != nil {
+		return nil, err
+	}
+	HWAddress, err := a.GetPropertyHWAddress()
+	if err != nil {
+		return nil, err
+	}
+	Mode, err := a.GetPropertyMode()
+	if err != nil {
+		return nil, err
+	}
+	MaxBitrate, err := a.GetPropertyMaxBitrate()
+	if err != nil {
+		return nil, err
+	}
+	Strength, err := a.GetPropertyStrength()
+	if err != nil {
+		return nil, err
+	}
 
-	m["Flags"], _ = a.GetPropertyFlags()
-	m["WPAFlags"], _ = a.GetPropertyWPAFlags()
-	m["RSNFlags"], _ = a.GetPropertyRSNFlags()
-	m["SSID"], _ = a.GetPropertySSID()
-	m["Frequency"], _ = a.GetPropertyFrequency()
-	m["HWAddress"], _ = a.GetPropertyHWAddress()
-	m["MaxBitrate"], _ = a.GetPropertyMaxBitrate()
-	m["Strength"], _ = a.GetPropertyStrength()
-
-	mode, _ := a.GetPropertyMode()
-	m["Mode"] = mode.String()
-
-	return json.Marshal(m)
+	return json.Marshal(map[string]interface{}{
+		"Flags":      Flags,
+		"WPAFlags":   WPAFlags,
+		"RSNFlags":   RSNFlags,
+		"SSID":       SSID,
+		"Frequency":  Frequency,
+		"HWAddress":  HWAddress,
+		"Mode":       Mode.String(),
+		"MaxBitrate": MaxBitrate,
+		"Strength":   Strength,
+	})
 }
