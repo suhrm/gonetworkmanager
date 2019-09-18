@@ -12,3 +12,7 @@ Tested with NetworkManager 1.16.0.
 ## Backward compatibility
 
 The library should also be compatible with NetworkManager 0.9.8.10.
+
+## Usage
+
+You can find some examples in the [examples](examples) directory.
