@@ -160,26 +160,18 @@ func (a *activeConnection) GetPropertyDefault() (bool, error) {
 
 func (a *activeConnection) GetPropertyIP4Config() (IP4Config, error) {
 	path, err := a.getObjectProperty(ActiveConnectionPropertyIp4Config)
-	if err != nil {
+	if err != nil || path == "/" {
 		return nil, err
 	}
-	r, err := NewIP4Config(path)
-	if err != nil {
-		return nil, err
-	}
-	return r, nil
+	return NewIP4Config(path)
 }
 
 func (a *activeConnection) GetPropertyDHCP4Config() (DHCP4Config, error) {
 	path, err := a.getObjectProperty(ActiveConnectionPropertyDhcp4Config)
-	if err != nil {
+	if err != nil || path == "/" {
 		return nil, err
 	}
-	r, err := NewDHCP4Config(path)
-	if err != nil {
-		return nil, err
-	}
-	return r, nil
+	return NewDHCP4Config(path)
 }
 
 func (a *activeConnection) GetPropertyDefault6() (bool, error) {
@@ -214,12 +206,8 @@ func (a *activeConnection) GetPropertyVPN() (bool, error) {
 
 func (a *activeConnection) GetPropertyMaster() (Device, error) {
 	path, err := a.getObjectProperty(ActiveConnectionPropertyMaster)
-	if err != nil {
+	if err != nil || path == "/" {
 		return nil, err
 	}
-	r, err := DeviceFactory(path)
-	if err != nil {
-		return nil, err
-	}
-	return r, nil
+	return DeviceFactory(path)
 }
