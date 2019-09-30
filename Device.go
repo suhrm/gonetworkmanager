@@ -74,6 +74,18 @@ func DeviceFactory(objectPath dbus.ObjectPath) (Device, error) {
 type Device interface {
 	GetPath() dbus.ObjectPath
 
+	// Attempts to update the configuration of a device without deactivating it. NetworkManager has the concept of connections, which are profiles that contain the configuration for a networking device. Those connections are exposed via D-Bus as individual objects that can be created, modified and deleted. When activating such a settings-connection on a device, the settings-connection is cloned to become an applied-connection and used to configure the device (see GetAppliedConnection). Subsequent modification of the settings-connection don't propagate automatically to the device's applied-connection (with exception of the firewall-zone and the metered property). For the changes to take effect, you can either re-activate the settings-connection, or call Reapply. The Reapply call allows you to directly update the applied-connection and reconfigure the device. Reapply can also be useful if the currently applied-connection is equal to the connection that is about to be reapplied. This allows to reconfigure the device and revert external changes like removing or adding an IP address (which NetworkManager doesn't revert automatically because it is assumed that the user made these changes intentionally outside of NetworkManager). Reapply can make the applied-connection different from the settings-connection, just like updating the settings-connection can make them different.
+	// connection: The optional connection settings that will be reapplied on the device. If empty, the currently active settings-connection will be used. The connection cannot arbitrarly differ from the current applied-connection otherwise the call will fail. Only certain changes are supported, like adding or removing IP addresses.
+	// versionId: If non-zero, the current version id of the applied-connection must match. The current version id can be retrieved via GetAppliedConnection. This optional argument allows to catch concurrent modifications between the GetAppliedConnection call and Reapply.
+	// flags: Flags which would modify the behavior of the Reapply call. There are no flags defined currently and the users should use the value of 0.
+	Reapply(connection Connection, versionId uint64, flags uint) error
+
+	// Get the currently applied connection on the device. This is a snapshot of the last activated connection on the device, that is the configuration that is currently applied on the device. Usually this is the same as GetSettings of the referenced settings connection. However, it can differ if the settings connection was subsequently modified or the applied connection was modified by Reapply. The applied connection is set when activating a device or when calling Reapply.
+	// flags: Flags which would modify the behavior of the GetAppliedConnection call. There are no flags defined currently and the users should use the value of 0.
+	// settings: The effective connection settings that the connection has currently applied.
+	// versionId: The version-id of the currently applied connection. This can be specified during Reapply to avoid races where you first fetch the applied connection, modify it and try to reapply it. If the applied connection is modified in the meantime, the version_id gets incremented and Reapply will fail.
+	GetAppliedConnection(flags uint) (settings ConnectionSettings, versionId int, err error)
+
 	// Disconnects a device and prevents the device from automatically activating further connections without user intervention.
 	Disconnect() error
 
@@ -157,6 +169,27 @@ type device struct {
 
 func (d *device) GetPath() dbus.ObjectPath {
 	return d.obj.Path()
+}
+
+func (d *device) Reapply(connection Connection, versionId uint64, flags uint) (err error) {
+
+	var settings ConnectionSettings
+	if connection != nil {
+		settings, err = connection.GetSettings()
+		if err != nil {
+			return
+		}
+	}
+	return d.call(DeviceReapply, settings, versionId, flags)
+}
+
+func (d *device) GetAppliedConnection(flags uint) (settings ConnectionSettings, versionId int, err error) {
+	err = d.callWithReturn2(&settings, &versionId, DeviceGetAppliedConnection, flags)
+	if err != nil {
+		return
+	}
+
+	return
 }
 
 func (d *device) Disconnect() error {
