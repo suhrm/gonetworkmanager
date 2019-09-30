@@ -63,7 +63,7 @@ type IP6Config interface {
 	GetPropertyRouteData() ([]IP6RouteData, error)
 
 	// GetNameservers gets the nameservers in use.
-	GetPropertyNameservers() ([]string, error)
+	GetPropertyNameservers() ([][]byte, error)
 
 	// A list of domains this address belongs to.
 	GetPropertyDomains() ([]string, error)
@@ -169,16 +169,16 @@ func (c *ip6Config) GetPropertyRouteData() ([]IP6RouteData, error) {
 	return routes, nil
 }
 
-func (c *ip6Config) GetPropertyNameservers() ([]string, error) {
+func (c *ip6Config) GetPropertyNameservers() ([][]byte, error) {
 	nameservers, err := c.getSliceSliceByteProperty(IP6ConfigPropertyNameservers)
-	ret := make([]string, len(nameservers))
+	ret := make([][]byte, len(nameservers))
 
 	if err != nil {
 		return ret, err
 	}
 
 	for i, nameserver := range nameservers {
-		ret[i] = string(nameserver)
+		ret[i] = nameserver
 	}
 
 	return ret, nil
