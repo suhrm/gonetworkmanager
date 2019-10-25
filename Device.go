@@ -144,6 +144,8 @@ type Device interface {
 	GetPropertyReal() (bool, error)
 
 	MarshalJSON() ([]byte, error)
+	// Get map of device properties
+	GetPropertyMAP() (map[string]interface{}, error)
 }
 
 func NewDevice(objectPath dbus.ObjectPath) (Device, error) {
@@ -341,4 +343,9 @@ func (d *device) MarshalJSON() ([]byte, error) {
 		return nil, err
 	}
 	return json.Marshal(m)
+}
+
+
+func (d *device) GetPropertyMAP() (map[string]interface{}, error){
+	return d.marshalMap()
 }
